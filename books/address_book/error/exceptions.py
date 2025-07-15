@@ -4,20 +4,7 @@
 Exceptions for address book implementation
 """
 
-
-class ObjectNotFound(KeyError):
-    def __init__(self, message):
-        super().__init__(message)
-
-
-class ObjectAlreadyExist(KeyError):
-    def __init__(self, message):
-        super().__init__(message)
-
-
-class ObjectValueError(ValueError):
-    def __init__(self, message):
-        super().__init__(message)
+from books.commons import ObjectNotFound, ObjectAlreadyExist, ObjectValueError
 
 
 class ContactNotFound(ObjectNotFound):

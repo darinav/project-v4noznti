@@ -11,4 +11,5 @@ __all__ = [
     'NoteAlreadyExist',
     'NoteTitleMandatory',
     'NoteTextMandatory',
+    'TagValueCannotBeEmpty',
 ]

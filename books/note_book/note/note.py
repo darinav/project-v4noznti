@@ -8,33 +8,15 @@ import re
 from typing import Optional, Any
 
 
-from ..error import (
-    NoteTitleMandatory,
-    NoteTextMandatory,
-)
-
-
-class Field:
-    def __init__(self, value: Any):
-        """ Initialize the field with the specified value
-
-        :param value: the value (any type, mandatory)
-        """
-        self.value = value
-
-    def __str__(self) -> str:
-        """ Create a readable string for the class instance
-
-        :return: readable string (string)
-        """
-        return str(self.value)
+from books.commons import Field
+from ..error import NoteTitleMandatory, NoteTextMandatory, TagValueCannotBeEmpty
 
 
 class Title(Field):
-    def __init__(self, value: Any):
+    def __init__(self, value: str):
         """ Initialize the Title field with the specified value
 
-        :param value: the value (any type, mandatory)
+        :param value: the title (string, mandatory)
         """
         # Check whether the name is empty or None
         if not value:
@@ -43,14 +25,26 @@ class Title(Field):
 
 
 class Text(Field):
-    def __init__(self, value: Any):
+    def __init__(self, value: str):
         """ Initialize the Text field with the specified value
 
-        :param value: the value (any type, mandatory)
+        :param value: the text (string, mandatory)
         """
         # Check whether the name is empty or None
         if not value:
             raise NoteTextMandatory()
+        super().__init__(str(value))
+
+
+class Tag(Field):
+    def __init__(self, value: str):
+        """ Initialize the Tag field with the specified value
+
+        :param value: the text (string, mandatory)
+        """
+        # Check whether the name is empty or None
+        if not value:
+            raise TagValueCannotBeEmpty()
         super().__init__(str(value))
 
 
@@ -62,14 +56,14 @@ class Tags:
 
         :param tags: list of tags (list of any values, optional)
         """
-        self.__tags: set[str] = {str(tag) for tag in (tags or []) if tag is not None or str(tag) != ''}
+        self.__tags: set[Tag] = {Tag(tag) for tag in (tags or []) if tag is not None or str(tag) != ''}
 
     def __str__(self) -> str:
         """ Create a readable string for the class instance
 
         :return: readable string (string)
         """
-        return ', '.join(sorted(self.__tags))
+        return ', '.join(sorted([str(t) for t in self.__tags]))
 
     @property
     def count(self) -> int:

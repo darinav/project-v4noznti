@@ -4,20 +4,7 @@
 Exceptions for notebook implementation
 """
 
-
-class ObjectNotFound(KeyError):
-    def __init__(self, message):
-        super().__init__(message)
-
-
-class ObjectAlreadyExist(KeyError):
-    def __init__(self, message):
-        super().__init__(message)
-
-
-class ObjectValueError(ValueError):
-    def __init__(self, message):
-        super().__init__(message)
+from books.commons import ObjectNotFound, ObjectAlreadyExist, ObjectValueError
 
 
 class NoteNotFound(ObjectNotFound):
@@ -38,3 +25,8 @@ class NoteTitleMandatory(ObjectValueError):
 class NoteTextMandatory(ObjectValueError):
     def __init__(self):
         super().__init__("The note text is required")
+
+
+class TagValueCannotBeEmpty(ObjectValueError):
+    def __init__(self):
+        super().__init__("The tag value cannot be empty")

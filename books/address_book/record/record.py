@@ -7,9 +7,10 @@ Record class for address book implementation
 import re
 import datetime
 import phonenumbers
-from typing import Optional, Any
+from typing import Optional
 
 
+from books.commons import Field
 from ..error import (
     ContactNameMandatory,
     ContactPhoneNotFound,
@@ -23,22 +24,6 @@ from ..error import (
 )
 
 
-class Field:
-    def __init__(self, value: Any):
-        """ Initialize the field with the specified value
-
-        :param value: the value (any types, mandatory)
-        """
-        self.value = value
-
-    def __str__(self) -> str:
-        """ Create a readable string for the class instance
-
-        :return: readable string (string)
-        """
-        return str(self.value)
-
-
 class Name(Field):
     def __init__(self, value: str):
         """ Initialize the Name field with the specified value
@@ -48,7 +33,7 @@ class Name(Field):
         # Check whether the name is empty or None
         if not value:
             raise ContactNameMandatory()
-        super().__init__(value)
+        super().__init__(str(value))
 
 
 class Birthday(Field):
