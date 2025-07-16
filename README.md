@@ -9,6 +9,7 @@
 
 ## Структура проекту
 
+```
 project-v4noznti/
 ├── books/
 │   ├── __init__.py
@@ -42,6 +43,7 @@ project-v4noznti/
 ├── README.md                            # Інструкція, опис команд
 ├── requirements.txt                     # phonenumbers==9.0.9
 └── .gitignore                           # Стандартні виключення (venv, __pycache__, .DS_Store)
+```
 
 ## Основні функції
 
