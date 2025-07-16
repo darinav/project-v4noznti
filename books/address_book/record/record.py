@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-"
+# -*- coding: utf-8 -*-
 
 """
 Record class for address book implementation

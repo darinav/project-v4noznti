@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-"
+# -*- coding: utf-8 -*-
 
 """
 Note class for notebook implementation
@@ -139,7 +139,7 @@ class Note:
         """
         self.__title = Title(title)
         self.__text = Text(text)
-        self.__tags = Tags(*(tags if tags else (self.__class__.parse_text_for_hashtags(text ) if hashtags else [])))
+        self.__tags = Tags(*(tags if tags else (self.__class__.parse_text_for_hashtags(text) if hashtags else [])))
 
 
     def __str__(self) -> str:

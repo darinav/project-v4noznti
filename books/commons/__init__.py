@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-"
+# -*- coding: utf-8 -*-
 
 __title__ = 'Personal Assistant Books Common Classes'
 __author__ = 'project-group-3'
