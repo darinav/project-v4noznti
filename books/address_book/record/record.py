@@ -215,20 +215,28 @@ class Record:
         :return: readable string (string)
         """
 
-        readable_string: str = f"Contact name: {str(self.name)}"
+        readable_string: str = f"Contact name: {self.name}"
         if self.__birthday is not None:
-            readable_string += f", birthday: {str(self.__birthday)}"
+            readable_string += f", birthday: {str(self.birthday)}"
         if self.__phones:
             readable_string += ", phones: {phones}".format(phones="; ".join(i for i in self.phones))
         if self.__emails:
             readable_string += ", emails: {emails}".format(emails="; ".join(i for i in self.emails))
         if self.__address:
-            readable_string += f", address: {str(self.__address)}"
+            readable_string += f", address: {self.address}"
         return readable_string
 
     @property
     def name(self) -> str:
         return str(self.__name)
+
+    @property
+    def address(self) -> str:
+        return str(self.__address)
+
+    @property
+    def birthday(self) -> Optional[datetime.date]:
+        return self.__birthday
 
     @property
     def phones(self) -> list[str]:

@@ -157,3 +157,58 @@ class AddressBook(UserDict):
 
         # Sort and return contacts birthdays by date
         return dict(sorted(upcoming_birthdays.items()))
+
+    def __search_merge(self, *args) -> list[Record]:
+        """ Merge search result sets and return the contact records
+
+        :param args: search result sets (set of string, optional)
+        :return: found contact records (list of Records)
+        """
+        found_keys: set[str] = set()
+        # Combine the search results into a single set
+        for result in args:
+            if isinstance(result, set):
+                found_keys.update(result)
+        # Return found records
+        return [value for key, value in self.items() if key in found_keys]
+
+    def search_by_address(self, keyword: str) -> list[Record]:
+        """ Search and return the contact records by keyword/sequence in the address
+
+        :param keyword: search keyword or sequence (string, mandatory)
+        :return: found contact records (list of Records)
+        """
+        return self.__search_merge({key for key, value in self.items() if keyword and keyword in value.address})
+
+    def search_by_phone(self, keyword: str) -> list[Record]:
+        """ Search and return the contact records by keyword/sequence in the phone numbers
+
+        :param keyword: search keyword or sequence (string, mandatory)
+        :return: found contact records (list of Records)
+        """
+        return self.__search_merge(
+            {key for key, value in self.items() if keyword and [i for i in value.phones if keyword in i]}
+        )
+
+    def search_by_email(self, keyword: str) -> list[Record]:
+        """ Search and return the contact records by keyword/sequence in the emails
+
+        :param keyword: search keyword or sequence (string, mandatory)
+        :return: found contact records (list of Records)
+        """
+        return self.__search_merge(
+            {key for key, value in self.items() if keyword and [i for i in value.emails if keyword in i]}
+        )
+
+    def search(self, keyword: str) -> list[Record]:
+        """ Search and return the contact records by keyword/sequence in the name, address, phone numbers and emails
+
+        :param keyword: search keyword or sequence (string, mandatory)
+        :return: found contact records (list of Records)
+        """
+        return self.__search_merge(
+            {key for key, value in self.items() if keyword and keyword in value.name},
+            {key for key, value in self.items() if keyword and keyword in value.address},
+            {key for key, value in self.items() if keyword and [i for i in value.phones if keyword in i]},
+            {key for key, value in self.items() if keyword and [i for i in value.emails if keyword in i]},
+        )
