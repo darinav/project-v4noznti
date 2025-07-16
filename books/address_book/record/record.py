@@ -21,6 +21,8 @@ from ..error import (
     ContactEmailValueError,
     ContactBirthdayAlreadyExist,
     ContactBirthdayValueError,
+    ContactAddressAlreadyExist,
+    ContactAddressCannotBeEmpty,
 )
 
 
@@ -155,27 +157,46 @@ class Email(Field):
         return value
 
 
+class Address(Field):
+    def __init__(self, value: str):
+        """ Initialize the Address field with the specified value
+
+        :param value: the value (string, mandatory)
+        """
+        # Check whether the name is empty or None
+        if not value:
+            raise ContactAddressCannotBeEmpty()
+        super().__init__(str(value))
+
+
 class Record:
     def __init__(
             self,
             name: str,
+            address: Optional[str] = None,
             birthday: Optional[str] = None,
             phones: Optional[list[str]] = None,
             emails: Optional[list[str]] = None,
     ):
-        """ Initialize the Contact record for the specified Name and with the Birthday, Phone numbers or Emails, if given
+        """ Initialize the Contact record for the specified Name and with the Address, Birthday, Phone numbers
+            or Emails, if given
 
         :param name: the name value (string, mandatory)
-        :param name: the birthday value (string, optional)
+        :param address: the address value (string, optional)
+        :param birthday: the birthday value (string, optional)
         :param phones: the phone numbers (list of strings, optional)
         :param emails: the emails (list of strings, optional)
         """
         self.__name: Name = Name(name)
+        self.__address: Optional[Address] = None
         self.__birthday: Optional[Birthday] = None
         self.__phones: list[Phone] = []
         self.__emails: list[Email] = []
+        # Add address if given
+        if isinstance(address, str) and address:
+            self.edit_address(address)
         # Add birthday if given
-        if isinstance(birthday, str):
+        if isinstance(birthday, str) and birthday:
             self.edit_birthday(birthday)
         # Add phone numbers if given, removing duplicates
         if isinstance(phones, list):
@@ -187,6 +208,23 @@ class Record:
             for email in emails:
                 if self.__find_email(email) is None:
                     self.add_email(email)
+
+    def __str__(self) -> str:
+        """ Create a readable string for the class instance
+
+        :return: readable string (string)
+        """
+
+        readable_string: str = f"Contact name: {str(self.name)}"
+        if self.__birthday is not None:
+            readable_string += f", birthday: {str(self.__birthday)}"
+        if self.__phones:
+            readable_string += ", phones: {phones}".format(phones="; ".join(i for i in self.phones))
+        if self.__emails:
+            readable_string += ", emails: {emails}".format(emails="; ".join(i for i in self.emails))
+        if self.__address:
+            readable_string += f", address: {str(self.__address)}"
+        return readable_string
 
     @property
     def name(self) -> str:
@@ -229,8 +267,30 @@ class Record:
         """
         self.__name = Name(name)
 
+    def add_address(self, address: str) -> None:
+        """ Add the address to the Contact record, or raise the address already exists exception
+
+        :param address: address string (string, mandatory)
+        """
+        if self.__address is not None:
+            raise ContactAddressAlreadyExist()
+        # Add the birthday
+        self.edit_address(address)
+
+    def edit_address(self, address: str) -> None:
+        """ Edit the address for the Contact record, or raise the address value error exception
+
+        :param address: address string (string, mandatory)
+        """
+        self.__address = Address(address)
+
+    def delete_address(self) -> None:
+        """ Delete the address from the Contact record
+        """
+        self.__address = None
+
     def add_birthday(self, birthday: str) -> None:
-        """ Add the birthday, or raise the birthday already exists exception
+        """ Add the birthday to the Contact record, or raise the birthday already exists exception
 
         :param birthday: birthday (string, mandatory)
         """
@@ -240,11 +300,16 @@ class Record:
         self.edit_birthday(birthday)
 
     def edit_birthday(self, birthday: str) -> None:
-        """ Edit the birthday, or raise the birthday value error exception
+        """ Edit the birthday for the Contact record, or raise the birthday value error exception
 
         :param birthday: birthday (string, mandatory)
         """
         self.__birthday = Birthday(birthday)
+
+    def delete_birthday(self) -> None:
+        """ Delete the birthday from the Contact record
+        """
+        self.__birthday = None
 
     def next_birthday(self, today: datetime.date) -> Optional[datetime.date]:
         """Return the next birthday of contact. If the birthday is on February 29 and today's year is not a leap year,
@@ -341,19 +406,3 @@ class Record:
         :param email: new email (string, mandatory)
         """
         self.__emails[self.__emails.index(self.find_email(existing_email))] = Email(email)
-
-
-    def __str__(self) -> str:
-        """ Create a readable string for the class instance
-
-        :return: readable string (string)
-        """
-
-        readable_string: str = f"Contact name: {str(self.name)}"
-        if self.__birthday is not None:
-            readable_string += f", birthday: {str(self.__birthday)}"
-        if self.__phones:
-            readable_string += ", phones: {phones}".format(phones="; ".join(i for i in self.phones))
-        if self.__emails:
-            readable_string += ", emails: {emails}".format(emails="; ".join(i for i in self.emails))
-        return readable_string

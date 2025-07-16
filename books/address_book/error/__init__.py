@@ -18,4 +18,6 @@ __all__ = [
     'ContactEmailValueError',
     'ContactBirthdayAlreadyExist',
     'ContactBirthdayValueError',
+    'ContactAddressAlreadyExist',
+    'ContactAddressCannotBeEmpty',
 ]

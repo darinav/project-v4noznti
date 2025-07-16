@@ -62,3 +62,13 @@ class ContactBirthdayAlreadyExist(ObjectAlreadyExist):
 class ContactBirthdayValueError(ObjectValueError):
     def __init__(self):
         super().__init__("The contact birthday must be in \"DD.MM.YYYY\" format")
+
+
+class ContactAddressAlreadyExist(ObjectAlreadyExist):
+    def __init__(self):
+        super().__init__("The contact address already exists")
+
+
+class ContactAddressCannotBeEmpty(ObjectValueError):
+    def __init__(self):
+        super().__init__("The address cannot be empty")
