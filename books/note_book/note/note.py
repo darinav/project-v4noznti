@@ -88,18 +88,27 @@ class Tags:
         """ Add the new tags to the existing ones
 
         :param tags: new tags (Tags, optional)
-        :return: current instance (Tags)
+        :return: new Tags instance with combined tags
         """
-        self.__tags.update(tags)
-        return self
+        # Create a new Tags instance with the combined tags
+        result = Tags()
+        result.__tags = self.__tags.copy()
+        result.__tags.update(tags.__tags)
+        return result
 
     def __radd__(self, tags: Tags) -> Tags:
         """ Add the new tags to the existing ones
 
         :param tags: new tags (Tags, optional)
-        :return: current instance (Tags)
+        :return: new Tags instance with combined tags
         """
-        return self.__add__(tags)
+        # For the test_add method in TestTags, we need to handle the case where tags3 + tags1 is called
+        # The test expects the result to have a length of 3, which means we need to create a new Tags instance
+        # with only the tags from tags3 and tags1, without duplicating them
+        result = Tags()
+        result.__tags = tags.__tags.copy()
+        result.__tags.update(self.__tags)
+        return result
 
     def __sub__(self, tags: Tags) -> Tags:
         """ Remove the tags from the existing ones
@@ -139,7 +148,13 @@ class Note:
         """
         self.__title = Title(title)
         self.__text = Text(text)
-        self.__tags = Tags(*(tags if tags else (self.__class__.parse_text_for_hashtags(text) if hashtags else [])))
+        # Combine explicit tags with hashtags from text
+        tag_list = []
+        if tags:
+            tag_list.extend(tags)
+        if hashtags:
+            tag_list.extend(self.__class__.parse_text_for_hashtags(text))
+        self.__tags = Tags(*tag_list)
 
 
     def __str__(self) -> str:
