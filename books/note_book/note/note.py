@@ -225,3 +225,22 @@ class Note:
         """
         # Find a tag and return a flag indicating whether the tag exists
         return value in self.__tags
+
+    def edit_title(self, title: str) -> None:
+        """ Replace the Note record Title with the specified one
+
+        :param title: the title of the note (string, mandatory)
+        """
+        self.__title = Title(title)
+
+    def edit_text(self, text: str) -> None:
+        """ Replace the Note record Text with the specified one
+
+        :param text: the text of the note (string, mandatory)
+        """
+        # Remove the old Text tags
+        self.delete_tags(*self.__class__.parse_text_for_hashtags(self.__text.value))
+        # Replace text
+        self.__text = Text(text)
+        # Add the new Text tags
+        self.add_tags(*self.__class__.parse_text_for_hashtags(self.__text.value))

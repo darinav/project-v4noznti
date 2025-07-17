@@ -6,7 +6,7 @@ Note Book class implementation
 
 import enum
 from collections import UserList
-
+from typing import Optional
 
 from .error import NoteNotFound, NoteAlreadyExist
 from .note import Note
@@ -61,28 +61,32 @@ class NoteBook(UserList):
             )
         ]
 
-    def add_note(self, note: Note) -> None:
+    def add_note(self, note: Note) -> int:
         """ Add the note record, or raise the note already exists exception
 
         :param note: note record (Note, mandatory)
+        :return: index of the added note (int)
         """
         if self.__unique_titles and note.title in self.__titles():
             # Unique titles mode: Note found - raise the note already exists exception
             raise NoteAlreadyExist()
         # Add the note record
         self.data.append(note)
+        # Return Note record index
+        return len(self.data)
 
-    def get_note(self, index: int) -> Note:
+    def get_note(self, index: int) -> tuple[int, Note]:
         """ Get the note record, or raise the note not found exception
 
-        :param index: note record (Note, mandatory)
+        :param index: note record index (int, mandatory)
+        :return: note record with index (tuple int, Note)
         """
         if index <= 0:
             # Wrong index value - raise the note not found exception
             raise NoteNotFound()
         # Remove the note
         try:
-            return self.data[index-1]
+            return index, self.data[index-1]
         except IndexError:
             raise NoteNotFound()
 
@@ -96,7 +100,9 @@ class NoteBook(UserList):
             raise NoteNotFound()
         # Remove the note
         try:
-            self.data.pop(index-1)
+            note: Optional[Note] = self.data.pop(index - 1)
+            if note is not None:
+                del note
         except IndexError:
             raise NoteNotFound()
 
