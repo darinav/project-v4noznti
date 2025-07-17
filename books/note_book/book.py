@@ -5,14 +5,14 @@ Note Book class implementation
 """
 
 import enum
-from collections import UserList
+from collections import UserDict
 from typing import Optional
 
 from .error import NoteNotFound, NoteAlreadyExist
 from .note import Note
 
 
-class NoteBook(UserList):
+class NoteBook(UserDict):
 
     class SortOrder(enum.Enum):
         index = enum.auto()
@@ -38,12 +38,19 @@ class NoteBook(UserList):
     def __setstate__(self, value):
         self.__dict__ = value
 
+    def __next_note_index(self) -> int:
+        """ Return the next Note index
+
+        :return: index (int)
+        """
+        return max(self.keys()) + 1 if self.data else 1
+
     def __titles(self) -> set[str]:
         """ Return the notes titles
 
         :return: set of the notes titles (set of str)
         """
-        return {n.title for n in self.data}
+        return {n.title for n in self.values()}
 
     def notes(self, order: SortOrder = SortOrder.index) -> list[tuple[int, Note]]:
         """ Return the sorted notes with indices
@@ -52,12 +59,12 @@ class NoteBook(UserList):
         :return: list of the note records (list of tuple int, Note)
         """
         if order == NoteBook.SortOrder.index:
-            return [(idx + 1, n) for idx, n in enumerate(self.data)]
+            return [(idx, note) for idx, note in self.items()]
 
         return [
-            (self.data.index(n) + 1, n) for n in sorted(
-                self.data,
-                key=lambda i: (i.tags if order == NoteBook.SortOrder.tags else i.title).lower()
+            (idx, note) for idx, note in sorted(
+                self.items(),
+                key=lambda item: (item[1].tags if order == NoteBook.SortOrder.tags else item[1].title).lower()
             )
         ]
 
@@ -71,9 +78,9 @@ class NoteBook(UserList):
             # Unique titles mode: Note found - raise the note already exists exception
             raise NoteAlreadyExist()
         # Add the note record
-        self.data.append(note)
+        self.data[self.__next_note_index()] = note
         # Return Note record index
-        return len(self.data)
+        return next(reversed(self.data))
 
     def get_note(self, index: int) -> tuple[int, Note]:
         """ Get the note record, or raise the note not found exception
@@ -86,8 +93,8 @@ class NoteBook(UserList):
             raise NoteNotFound()
         # Remove the note
         try:
-            return index, self.data[index-1]
-        except IndexError:
+            return index, self.data[index]
+        except KeyError:
             raise NoteNotFound()
 
     def delete_note(self, index: int) -> None:
@@ -100,7 +107,7 @@ class NoteBook(UserList):
             raise NoteNotFound()
         # Remove the note
         try:
-            note: Optional[Note] = self.data.pop(index - 1)
+            note: Optional[Note] = self.data.pop(index, None)
             if note is not None:
                 del note
         except IndexError:
@@ -112,13 +119,13 @@ class NoteBook(UserList):
         :param args: search result sets (set of string, optional)
         :return: found notes (list of tuple int, Note)
         """
-        found_indices: set[int] = set()
+        found_keys: set[str] = set()
         # Combine the search results into a single set
         for result in args:
             if isinstance(result, set):
-                found_indices.update(result)
-        # Return found notes
-        return [(i, self.data[i]) for i in found_indices if i < len(self.data)]
+                found_keys.update(result)
+        # Return found records
+        return [(idx, note) for idx, note in self.items() if idx in found_keys]
 
     def search_by_title(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the title
@@ -127,7 +134,7 @@ class NoteBook(UserList):
         :return: found notes (list of tuple int, Note)
         """
         # Return the found notes
-        return self.__search_merge({idx for idx, n in enumerate(self.data) if keyword and keyword in n.title})
+        return self.__search_merge({idx for idx, note in self.items() if keyword and keyword in note.title})
 
     def search_by_text(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the text
@@ -136,7 +143,7 @@ class NoteBook(UserList):
         :return: found notes (list of tuple int, Note)
         """
         # Return the found notes
-        return self.__search_merge({idx for idx, n in enumerate(self.data) if keyword and keyword in n.text})
+        return self.__search_merge({idx for idx, note in self.items() if keyword and keyword in note.text})
 
     def search_by_tag(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the tags
@@ -145,9 +152,7 @@ class NoteBook(UserList):
         :return: found notes (list of tuple int, Note)
         """
         # Return the found notes
-        return self.__search_merge(
-            {idx for idx, n in enumerate(self.data) if keyword and keyword in n.tags}
-        )
+        return self.__search_merge({idx for idx, note in self.items() if keyword and keyword in note.tags})
 
     def search(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the title, text and tags
@@ -157,7 +162,7 @@ class NoteBook(UserList):
         """
         # Return the found notes
         return self.__search_merge(
-            {idx for idx, n in enumerate(self.data) if keyword and keyword in n.title},
-            {idx for idx, n in enumerate(self.data) if keyword and keyword in n.text},
-            {idx for idx, n in enumerate(self.data) if keyword and keyword in n.tags},
+            {idx for idx, note in self.items() if keyword and keyword in note.title},
+            {idx for idx, note in self.items() if keyword and keyword in note.text},
+            {idx for idx, note in self.items() if keyword and keyword in note.tags},
         )
