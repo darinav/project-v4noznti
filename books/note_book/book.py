@@ -107,10 +107,9 @@ class NoteBook(UserDict):
             raise NoteNotFound()
         # Remove the note
         try:
-            note: Optional[Note] = self.data.pop(index, None)
-            if note is not None:
-                del note
-        except IndexError:
+            note: Note = self.data.pop(index)
+            del note
+        except KeyError:
             raise NoteNotFound()
 
     def __search_merge(self, *args) -> list[tuple[int, Note]]:
