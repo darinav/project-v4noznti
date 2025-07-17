@@ -107,8 +107,7 @@ class NoteBook(UserDict):
             raise NoteNotFound()
         # Remove the note
         try:
-            note: Note = self.data.pop(index)
-            del note
+            self.data.pop(index)
         except KeyError:
             raise NoteNotFound()
 
