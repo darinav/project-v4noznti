@@ -1,22 +1,5 @@
 import difflib
 
-CONTACT_COMMANDS = [
-    "add contact",
-    "show contact",
-    "delete contact",
-    "show all contacts",
-    "show birthdays",
-    "search contact",
-]
-
-NOTE_COMMANDS = [
-    "add note",
-    "search note",
-    "delete note",
-    "show all notes",
-    "sort notes by tag",
-]
-
 def __suggest_command(user_input: str, valid_commands: list[str], cutoff: float = 0.6) -> str | None:
     if not user_input or not valid_commands:
         return None
