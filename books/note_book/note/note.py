@@ -85,7 +85,24 @@ class Tags:
         return len(self.__tags)
 
     def __add__(self, tags: Tags) -> Tags:
-        """ Add the new tags to the existing ones
+        """ Add the new tags to the existing ones and return as new instance
+
+        :param tags: new tags (Tags, optional)
+        :return: new instance (Tags)
+        """
+        # Create a new Tags instance with the combined tags
+        return Tags(*self.__tags.union(tags))
+
+    def __radd__(self, tags: Tags) -> Tags:
+        """ Add the new tags to the existing ones and return as new instance
+
+        :param tags: new tags (Tags, optional)
+        :return: new instance (Tags)
+        """
+        return self.__add__(tags)
+
+    def __iadd__(self, tags: Tags) -> Tags:
+        """ In-place add the new tags to the existing ones
 
         :param tags: new tags (Tags, optional)
         :return: current instance (Tags)
@@ -93,30 +110,31 @@ class Tags:
         self.__tags.update(tags)
         return self
 
-    def __radd__(self, tags: Tags) -> Tags:
-        """ Add the new tags to the existing ones
-
-        :param tags: new tags (Tags, optional)
-        :return: current instance (Tags)
-        """
-        return self.__add__(tags)
-
     def __sub__(self, tags: Tags) -> Tags:
-        """ Remove the tags from the existing ones
+        """ Remove the tags from the existing ones and return as new instance
+
+        :param tags: tags to be deleted (Tags, optional)
+        :return: new instance (Tags)
+        """
+        # Create a new Tags instance with the tags removed
+        return Tags(*self.__tags.difference(tags))
+
+    def __rsub__(self, tags: Tags) -> Tags:
+        """ Remove the tags from the existing ones and return as new instance
+
+        :param tags: tags to be deleted (Tags, optional)
+        :return: new instance (Tags)
+        """
+        return self.__sub__(tags)
+
+    def __isub__(self, tags: Tags) -> Tags:
+        """ In-place remove the tags from the existing ones
 
         :param tags: tags to be deleted (Tags, optional)
         :return: current instance (Tags)
         """
         self.__tags.difference_update(tags)
         return self
-
-    def __rsub__(self, tags: Tags) -> Tags:
-        """ Remove the tags from the existing ones
-
-        :param tags: tags to be deleted (Tags, optional)
-        :return: current instance (Tags)
-        """
-        return self.__sub__(tags)
 
     def __find(self, value: Any) -> Optional[Tag]:
         """ Private method for searching the Tag by value
