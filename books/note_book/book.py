@@ -6,7 +6,6 @@ Note Book class implementation
 
 import enum
 from collections import UserDict
-from typing import Optional
 
 from .error import NoteNotFound, NoteAlreadyExist
 from .note import Note

@@ -34,6 +34,13 @@ class AddressBook(UserDict):
     def __setstate__(self, value):
         self.__dict__ = value
 
+    def __iter__(self):
+        """ Return iterable object for the sorted keys
+
+        :return: sorted keys (iterable object)
+        """
+        return iter(sorted(self.data))
+
     def __congratulation_date(
             self,
             contact: Record,

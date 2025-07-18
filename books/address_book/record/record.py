@@ -232,7 +232,7 @@ class Record:
 
     @property
     def address(self) -> str:
-        return str(self.__address)
+        return str(self.__address) if self.__address is not None else ''
 
     @property
     def birthday(self) -> Optional[datetime.date]:
