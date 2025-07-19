@@ -35,11 +35,13 @@ class AddressBook(UserDict):
         self.__dict__ = value
 
     def __iter__(self):
-        """ Return iterable object for the sorted keys
+        """ Return an iterable object with the key (name) lexicographically sorted
 
-        :return: sorted keys (iterable object)
+        :return: lexicographically sorted keys (names) (iterable object)
         """
         return iter(sorted(self.data))
+        # # An alternative version
+        # return iter({name: self.data[name] for name in sorted(self.data)})
 
     def __congratulation_date(
             self,
