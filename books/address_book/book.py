@@ -91,7 +91,7 @@ class AddressBook(UserDict):
         """
         if name not in self:
             # Contact found - raise the contact not found exception
-            raise ContactNotFound
+            raise ContactNotFound()
         # Return the contact
         return self.get(name, None)
 
@@ -115,7 +115,7 @@ class AddressBook(UserDict):
             # Contact not found - raise the contact not found exception
             raise ContactNotFound()
         # Remove the contact record
-        self.pop(name, None)
+        self.data.pop(name, None)
 
     def upcoming_birthdays(
             self,
@@ -134,7 +134,7 @@ class AddressBook(UserDict):
         UpcomingBirthday = namedtuple('UpcomingBirthday', ['contact', 'congratulation_date'])
 
         today: datetime.date = datetime.datetime.today().date()
-        for contact in self.values():
+        for contact in self.data.values():
             if (
                     congratulation_date := self.__congratulation_date(
                         contact,
@@ -177,7 +177,7 @@ class AddressBook(UserDict):
             if isinstance(result, set):
                 found_keys.update(result)
         # Return found records
-        return [value for key, value in self.items() if key in found_keys]
+        return [value for key, value in self.data.items() if key in found_keys]
 
     def search_by_address(self, keyword: str) -> list[Record]:
         """ Search and return the contact records by keyword/sequence in the address
@@ -185,7 +185,12 @@ class AddressBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found contact records (list of Records)
         """
-        return self.__search_merge({key for key, value in self.items() if keyword and keyword in value.address})
+        # Convert the keyword to lower case
+        keyword = keyword.lower() or ""
+        # Search by the keyword
+        return self.__search_merge(
+            {key for key, value in self.data.items() if keyword and keyword in value.address.lower()}
+        )
 
     def search_by_phone(self, keyword: str) -> list[Record]:
         """ Search and return the contact records by keyword/sequence in the phone numbers
@@ -193,8 +198,11 @@ class AddressBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found contact records (list of Records)
         """
+        # Convert the keyword to lower case
+        keyword = keyword.lower() or ""
+        # Search by the keyword
         return self.__search_merge(
-            {key for key, value in self.items() if keyword and [i for i in value.phones if keyword in i]}
+            {key for key, value in self.items() if keyword and [i for i in value.phones if keyword in i.lower()]}
         )
 
     def search_by_email(self, keyword: str) -> list[Record]:
@@ -203,8 +211,11 @@ class AddressBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found contact records (list of Records)
         """
+        # Convert the keyword to lower case
+        keyword = keyword.lower() or ""
+        # Search by the keyword
         return self.__search_merge(
-            {key for key, value in self.items() if keyword and [i for i in value.emails if keyword in i]}
+            {key for key, value in self.items() if keyword and [i for i in value.emails if keyword in i.lower()]}
         )
 
     def search(self, keyword: str) -> list[Record]:
@@ -213,9 +224,12 @@ class AddressBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found contact records (list of Records)
         """
+        # Convert the keyword to lower case
+        keyword = keyword.lower() or ""
+        # Search by the keyword
         return self.__search_merge(
-            {key for key, value in self.items() if keyword and keyword in value.name},
-            {key for key, value in self.items() if keyword and keyword in value.address},
-            {key for key, value in self.items() if keyword and [i for i in value.phones if keyword in i]},
-            {key for key, value in self.items() if keyword and [i for i in value.emails if keyword in i]},
+            {key for key, value in self.items() if keyword and keyword in value.name.lower()},
+            {key for key, value in self.items() if keyword and keyword in value.address.lower()},
+            {key for key, value in self.items() if keyword and [i for i in value.phones if keyword in i.lower()]},
+            {key for key, value in self.items() if keyword and [i for i in value.emails if keyword in i.lower()]},
         )
