@@ -60,12 +60,25 @@ class NoteBook(UserDict):
         if order == NoteBook.SortOrder.index:
             return [(idx, note) for idx, note in self.items()]
 
-        return [
-            (idx, note) for idx, note in sorted(
-                self.items(),
-                key=lambda item: (item[1].tags if order == NoteBook.SortOrder.tags else item[1].title).lower()
-            )
-        ]
+        if order == NoteBook.SortOrder.title:
+            return [
+                (idx, note) for idx, note in sorted(
+                    self.items(),
+                    key=lambda item: item[1].title.lower()
+                )
+            ]
+
+        if order == NoteBook.SortOrder.tags:
+            # Сортуємо за першим тегом (якщо є), інакше порожній рядок
+            return [
+                (idx, note) for idx, note in sorted(
+                    self.items(),
+                    key=lambda item: item[1].tags_list[0].lower() if item[1].tags_list else ""
+                )
+            ]
+
+        # fallback
+        return [(idx, note) for idx, note in self.items()]
 
     def add_note(self, note: Note) -> int:
         """ Add the note record, or raise the note already exists exception
@@ -161,5 +174,5 @@ class NoteBook(UserDict):
         return self.__search_merge(
             {idx for idx, note in self.items() if keyword and keyword in note.title},
             {idx for idx, note in self.items() if keyword and keyword in note.text},
-            {idx for idx, note in self.items() if keyword and keyword in note.tags},
+            {idx for idx, note in self.items() if keyword and keyword in note.tags_list},
         )

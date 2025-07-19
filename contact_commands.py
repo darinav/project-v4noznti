@@ -1,39 +1,110 @@
-"""
-contact_commands.py — модуль для обробки команд контактів у CLI-застосунку.
-
-Забезпечує логіку додавання, редагування, перегляду, пошуку та видалення
-контактів у адресній книзі, а також перегляд майбутніх днів народження.
-"""
-
-from colorama import Fore
+from colorama import Fore, Style
 from books import AddressBook, Record
-from books.address_book.error import (
-    ContactAlreadyExist,
-    ContactNotFound,
-    ContactPhoneAlreadyExist,
-    ContactEmailAlreadyExist,
-    ContactAddressAlreadyExist,
-    ContactBirthdayAlreadyExist,
-)
 
+import re
+import datetime
+
+def _find_record_exact(book: AddressBook, name: str):
+    try:
+        record = book.find(name)
+        if record and getattr(record, "name", None) == name:
+            return record
+    except Exception:
+        pass
+    return None
+
+def _format_record_row(record, birthday_override=None):
+    phones = ', '.join(str(ph) for ph in getattr(record, 'phones', []) if ph)
+    emails = ', '.join(str(em) for em in getattr(record, 'emails', []) if em)
+    address = getattr(record, 'address', '')
+    birthday = birthday_override if birthday_override else getattr(record, 'birthday', '')
+    if hasattr(birthday, 'value'):
+        birthday = birthday.value
+    return [
+        str(getattr(record, 'name', '')),
+        phones,
+        emails,
+        address,
+        birthday
+    ]
+
+def _print_contacts_table(records):
+    headers = [
+        "Ім'я",
+        "Телефон",
+        "Email",
+        "Адреса",
+        "ДН"
+    ]
+    rows = []
+    for r in records:
+        if isinstance(r, tuple) and len(r) == 2 and hasattr(r[0], "name"):
+            rows.append(_format_record_row(r[0], birthday_override=r[1]))
+        else:
+            rows.append(_format_record_row(r))
+    if not rows:
+        print(Fore.YELLOW + "Немає контактів для виводу.")
+        return
+
+    col_widths = [max(len(str(cell)) for cell in col) for col in zip(*([headers] + rows))]
+    def fmt_row(row):
+        return " │ ".join(str(cell).ljust(w) for cell, w in zip(row, col_widths))
+
+    border = "─┼─".join("─" * w for w in col_widths)
+
+    print(Fore.CYAN + fmt_row(headers))
+    print(Fore.MAGENTA + border)
+    for row in rows:
+        print(fmt_row(row))
+
+def ask_valid_birthday():
+    while True:
+        birthday = input(Fore.RED + "Введіть день народження (ДД.ММ.РРРР або Enter): ").strip()
+        if not birthday:
+            return ""
+        if re.match(r"^\d{2}\.\d{2}\.\d{4}$", birthday):
+            return birthday
+        print(Fore.RED + "❌ Формат дати має бути ДД.ММ.РРРР (наприклад, 21.07.2024).")
+
+def _parse_days(parts):
+    if len(parts) > 2:
+        try:
+            days = int(parts[2])
+            if days < 1 or days > 365:
+                days = 7
+        except Exception:
+            days = 7
+    else:
+        days = 7
+    return days
+
+def _filter_birthdays(records, days):
+    today = datetime.date.today()
+    upcoming = []
+    for r in records:
+        b = getattr(r, 'birthday', None)
+        date_value = None
+        if hasattr(b, 'value'):
+            b = b.value
+        if isinstance(b, str) and re.match(r"\d{2}\.\d{2}\.\d{4}", b):
+            try:
+                day, month, year = map(int, b.split('.'))
+                date_value = datetime.date(today.year, month, day)
+                if date_value < today:
+                    date_value = datetime.date(today.year + 1, month, day)
+            except Exception:
+                continue
+        elif isinstance(b, datetime.date):
+            date_value = b.replace(year=today.year)
+            if date_value < today:
+                date_value = date_value.replace(year=today.year + 1)
+        if date_value:
+            delta = (date_value - today).days
+            if 0 <= delta <= days:
+                upcoming.append((r, date_value.strftime('%d.%m.%Y')))
+    return upcoming
 
 def handle_contact_command(command: str, book: AddressBook) -> None:
-    """
-    Обробляє CLI-команду для роботи з контактами.
-
-    Аргументи:
-        command (str): текст команди, введений користувачем.
-        book (AddressBook): об'єкт адресної книги.
-
-    Підтримувані команди:
-        - add contact <name>
-        - edit contact <name>
-        - delete contact <name>
-        - show contact <name>
-        - show all contacts
-        - show birthdays <days>
-        - search contact <keyword>
-    """
     parts = command.strip().split()
     if not parts:
         print(Fore.RED + "⚠️ Порожня команда.")
@@ -41,131 +112,112 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
 
     action = parts[0].lower()
 
-    # Додавання нового контакту
-    if action == "add" and len(parts) >= 3 and parts[1] == "contact":
-        """
-        Додає новий контакт із введеним ім’ям, телефоном, email,
-        адресою та днем народження.
-        """
-        name = " ".join(parts[2:])
+    if action in ("help", "exit", "close", "switch"):
+        return
+
+    if action == "add" and len(parts) >= 2 and parts[1] == "contact":
+        name = " ".join(parts[2:]) if len(parts) > 2 else input(Fore.CYAN + "Введіть ім'я контакта: ").strip()
+        if not name:
+            print(Fore.RED + "⚠️ Ім'я не може бути порожнім.")
+            return
         try:
             record = Record(name)
-            print(Fore.YELLOW + "Введіть телефон (або Enter): ", end="")
-            phone = input().strip()
+            phone = input(Fore.YELLOW + "Введіть телефон (або Enter): ").strip()
             if phone:
                 record.add_phone(phone)
-
-            print(Fore.CYAN + "Введіть email (або Enter): ", end="")
-            email = input().strip()
+            email = input(Fore.CYAN + "Введіть email (або Enter): ").strip()
             if email:
                 record.add_email(email)
-
-            print(Fore.GREEN + "Введіть адресу (або Enter): ", end="")
-            address = input().strip()
+            address = input(Fore.GREEN + "Введіть адресу (або Enter): ").strip()
             if address:
                 record.add_address(address)
-
-            print(Fore.RED + "Введіть день народження (YYYY-MM-DD або Enter): ", end="")
-            birthday = input().strip()
+            birthday = ask_valid_birthday()
             if birthday:
                 record.add_birthday(birthday)
-
             book.add_record(record)
             print(Fore.GREEN + f"✅ Контакт '{name}' додано!")
-
         except Exception as e:
             print(Fore.RED + f"❌ Помилка: {e}")
 
-    # Редагування існуючого контакту
-    elif action == "edit" and len(parts) >= 3 and parts[1] == "contact":
-        """
-        Редагує перший телефон, email, адресу та день народження обраного контакту.
-        """
-        name = " ".join(parts[2:])
+    elif action == "edit" and len(parts) >= 2 and parts[1] == "contact":
+        name = " ".join(parts[2:]) if len(parts) > 2 else input(Fore.CYAN + "Введіть ім'я контакта для редагування: ").strip()
+        if not name:
+            print(Fore.RED + "⚠️ Ім'я не може бути порожнім.")
+            return
+        record = _find_record_exact(book, name)
+        if not record:
+            print(Fore.RED + f"❌ Контакт з ім'ям '{name}' не знайдено.")
+            return
         try:
-            record = book.find(name)
-            print(Fore.YELLOW + "Новий телефон (або Enter): ", end="")
-            phone = input().strip()
+            phone = input(Fore.YELLOW + "Новий телефон (або Enter): ").strip()
             if phone:
-                record.edit_phone(0, phone)
-
-            print(Fore.CYAN + "Новий email (або Enter): ", end="")
-            email = input().strip()
+                record.edit_phone('', phone)
+            email = input(Fore.CYAN + "Новий email (або Enter): ").strip()
             if email:
-                record.edit_email(0, email)
-
-            print(Fore.GREEN + "Нова адреса (або Enter): ", end="")
-            address = input().strip()
+                record.edit_email('', email)
+            address = input(Fore.GREEN + "Нова адреса (або Enter): ").strip()
             if address:
-                record.edit_address(0, address)
-
-            print(Fore.RED + "Новий день народження (або Enter): ", end="")
-            birthday = input().strip()
+                record.edit_address(address)
+            birthday = ask_valid_birthday()
             if birthday:
                 record.edit_birthday(birthday)
-
             print(Fore.GREEN + f"✅ Контакт '{name}' оновлено!")
         except Exception as e:
             print(Fore.RED + f"❌ Помилка: {e}")
 
-    # Видалення контакту
-    elif action == "delete" and len(parts) >= 3 and parts[1] == "contact":
-        """
-        Видаляє контакт за іменем.
-        """
-        name = " ".join(parts[2:])
+    elif action == "delete" and len(parts) >= 2 and parts[1] == "contact":
+        name = " ".join(parts[2:]) if len(parts) > 2 else input(Fore.CYAN + "Введіть ім'я контакта для видалення: ").strip()
+        if not name:
+            print(Fore.RED + "⚠️ Ім'я не може бути порожнім.")
+            return
+        record = _find_record_exact(book, name)
+        if not record:
+            print(Fore.RED + f"❌ Контакт з ім'ям '{name}' не знайдено.")
+            return
         try:
             book.delete_record(name)
             print(Fore.GREEN + f"🗑️ Контакт '{name}' видалено.")
         except Exception as e:
             print(Fore.RED + f"❌ Помилка: {e}")
 
-    # Показ одного контакту
-    elif action == "show" and len(parts) >= 3 and parts[1] == "contact":
-        """
-        Виводить повну інформацію про контакт за ім’ям.
-        """
-        name = " ".join(parts[2:])
-        try:
-            print(book.find(name))
-        except Exception as e:
-            print(Fore.RED + f"❌ Помилка: {e}")
+    elif action == "show" and len(parts) >= 2 and parts[1] == "contact":
+        name = " ".join(parts[2:]) if len(parts) > 2 else input(Fore.CYAN + "Введіть ім'я контакта для перегляду: ").strip()
+        if not name:
+            print(Fore.RED + "⚠️ Ім'я не може бути порожнім.")
+            return
+        record = _find_record_exact(book, name)
+        if not record:
+            print(Fore.RED + f"❌ Контакт з ім'ям '{name}' не знайдено.")
+            return
+        _print_contacts_table([record])
 
-    # Показ усіх контактів
     elif command == "show all contacts":
-        """
-        Виводить усі контакти з адресної книги.
-        """
-        for record in book:
-            print(record)
+        records = list(book.values()) if hasattr(book, 'values') else list(book)
+        if records:
+            _print_contacts_table(records)
+        else:
+            print(Fore.YELLOW + "Адресна книга порожня.")
 
-    # Показ майбутніх днів народження
     elif parts[0] == "show" and parts[1] == "birthdays":
-        """
-        Показує список контактів, у яких день народження
-        настане протягом вказаної кількості днів.
-        """
-        try:
-            days = int(parts[2]) if len(parts) > 2 else 7
-            records = book.upcoming_birthdays_by_days(days)
-            for r in records:
-                print(r)
-        except Exception as e:
-            print(Fore.RED + f"❌ Помилка: {e}")
+        days = _parse_days(parts)
+        records = list(book.values()) if hasattr(book, 'values') else list(book)
+        output_rows = _filter_birthdays(records, days)
+        if output_rows:
+            print(Fore.CYAN + f"Контакти, у яких день народження у наступні {days} днів:")
+            _print_contacts_table(output_rows)
+        else:
+            print(Fore.YELLOW + "Немає контактів із днями народження у цей період.")
 
-    # Пошук контактів
     elif parts[0] == "search" and parts[1] == "contact":
-        """
-        Пошук контактів за ключовим словом у імені, телефоні, email тощо.
-        """
-        keyword = " ".join(parts[2:])
-        results = book.search(keyword)
-        for r in results:
-            print(r)
+        keyword = " ".join(parts[2:]) if len(parts) > 2 else input(Fore.CYAN + "Введіть фразу для пошуку: ").strip()
+        if not keyword:
+            print(Fore.RED + "⚠️ Пошуковий запит не може бути порожнім.")
+            return
+        results = list(book.search(keyword))
+        if results:
+            _print_contacts_table(results)
+        else:
+            print(Fore.YELLOW + "Контактів не знайдено.")
 
-    # Невідома команда
     else:
-        """
-        Виводить повідомлення про помилку у випадку невідомої команди.
-        """
         print(Fore.RED + "⚠️ Невідома команда для контактів.")

@@ -9,7 +9,8 @@ from colorama import init, Fore, Style
 from books import AddressBook, NoteBook
 from contact_commands import handle_contact_command
 from note_commands import handle_note_command
-
+from cli.guess_command.guess_command import handle_command_with_guess
+from cli.guess_command.possible_commands import CONTACT_COMMANDS, NOTE_COMMANDS, GENERAL_COMMANDS
 
 # Ініціалізація кольорового виводу для CLI
 init(autoreset=True)
@@ -68,6 +69,33 @@ def print_help():
   exit / close         - вихід
 ''')
 
+def create_general_command_handler(current_mode):
+    def handle_general_command(cmd):
+        cmd_lower = cmd.lower()
+        if cmd_lower in ("exit", "close"):
+            return "exit"
+        elif cmd_lower == "switch":
+            return "notes" if current_mode == "contacts" else "contacts"
+        elif cmd_lower == "help":
+            print_help()
+    return handle_general_command
+
+def run_mode(mode_name, prompt, valid_commands, handler, book):
+    general_handler = create_general_command_handler(mode_name)
+    try:
+        while True:
+            command = input(prompt).strip()
+            result = handle_command_with_guess(
+                command, valid_commands + GENERAL_COMMANDS, handler, book, general_command_callback=general_handler
+            )
+            if result == "exit":
+                return "exit"
+            elif result in ("contacts", "notes"):
+                return result
+    except KeyboardInterrupt:
+        print("\n" + Fore.GREEN + "👋 До побачення!")
+        exit(0)
+
 
 def main():
     """
@@ -108,37 +136,28 @@ def main():
                 print(Fore.RED + "⚠️ Невідома опція. Спробуйте ще раз.")
 
         elif active_mode == "contacts":
-            command = input(Fore.BLUE + "[Контакти] >>> ").strip()
-
-            if command.lower() in ("exit", "close"):
+            next_mode = run_mode(
+                "contacts",
+                Fore.BLUE + "[Контакти] >>> ",
+                CONTACT_COMMANDS,
+                handle_contact_command,
+                address_book,
+            )
+            if next_mode == "exit":
                 break
-
-            elif command.lower() == "switch":
-                active_mode = "notes"
-                continue
-
-            elif command.lower() == "help":
-                print_help()
-                continue
-
-            handle_contact_command(command, address_book)
+            active_mode = next_mode
 
         elif active_mode == "notes":
-            command = input(Fore.YELLOW + "[Нотатки] >>> ").strip()
-
-            if command.lower() in ("exit", "close"):
+            next_mode = run_mode(
+                "notes",
+                Fore.YELLOW + "[Нотатки] >>> ",
+                NOTE_COMMANDS,
+                handle_note_command,
+                note_book,
+            )
+            if next_mode == "exit":
                 break
-
-            elif command.lower() == "switch":
-                active_mode = "contacts"
-                continue
-
-            elif command.lower() == "help":
-                print_help()
-                continue
-
-            handle_note_command(command, note_book)
-
+            active_mode = next_mode
 
 if __name__ == "__main__":
     main()

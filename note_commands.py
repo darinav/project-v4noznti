@@ -11,6 +11,10 @@ from books.note_book.book import NoteBook as FullNoteBook
 NoteBook.SortOrder = FullNoteBook.SortOrder
 from books.note_book.error import *
 
+def _find_note_exact(notebook: NoteBook, title: str):
+    notes = [item for item in notebook.notes() if item[1].title == title]
+    return notes[0] if notes else None
+
 def handle_note_command(command: str, notebook: NoteBook):
     parts = command.strip().split()
 
@@ -21,9 +25,25 @@ def handle_note_command(command: str, notebook: NoteBook):
     action = parts[0].lower()
 
     # Додавання нової нотатки
-    if action == "add" and len(parts) >= 3 and parts[1] == "note":
-        title = parts[2].strip('"')
-        text = " ".join(parts[3:]).strip('"')
+    if action == "add" and len(parts) >= 2 and parts[1] == "note":
+        if len(parts) == 2:
+            title = input("Введіть назву нотатки: ").strip()
+            if not title:
+                print(Fore.RED + "⚠️ Назва не може бути порожньою.")
+                return
+            text = input("Введіть текст нотатки: ").strip()
+            if not text:
+                print(Fore.RED + "⚠️ Текст не може бути порожнім.")
+                return
+        elif len(parts) == 3:
+            title = parts[2].strip('"')
+            text = input("Введіть текст нотатки: ").strip()
+            if not text:
+                print(Fore.RED + "⚠️ Текст не може бути порожнім.")
+                return
+        else:
+            title = parts[2].strip('"')
+            text = " ".join(parts[3:]).strip('"')
 
         try:
             note = Note(title, text)
@@ -33,71 +53,116 @@ def handle_note_command(command: str, notebook: NoteBook):
             print(Fore.RED + f"❌ Помилка: {e}")
 
     # Редагування тексту нотатки
-    elif action == "edit" and len(parts) >= 3 and parts[1] == "note":
-        title = parts[2]
+    elif action == "edit" and len(parts) >= 2 and parts[1] == "note":
+        if len(parts) == 2:
+            title = input("Введіть назву нотатки для редагування: ").strip()
+            if not title:
+                print(Fore.RED + "⚠️ Назва не може бути порожньою.")
+                return
+        else:
+            title = parts[2]
 
-        try:
-            results = notebook.search_by_title(title)
-            if not results:
-                raise NoteNotFound()
-            index, note = results[0]
-
-            print("Новий текст нотатки: ", end="")
-            new_text = input().strip()
-            note.edit_text(new_text)
-            print(Fore.GREEN + "✅ Нотатку оновлено.")
-        except Exception as e:
-            print(Fore.RED + f"❌ Помилка: {e}")
+        found = _find_note_exact(notebook, title)
+        if not found:
+            print(Fore.RED + f"❌ Нотатку з назвою '{title}' не знайдено.")
+            return
+        index, note = found
+        new_text = input("Новий текст нотатки: ").strip()
+        note.edit_text(new_text)
+        print(Fore.GREEN + "✅ Нотатку оновлено.")
 
     # Редагування тегів у нотатці
-    elif action == "edit" and len(parts) >= 3 and parts[1] == "tag":
-        title = parts[2]
+    elif action == "edit" and len(parts) >= 2 and parts[1] == "tag":
+        if len(parts) == 2:
+            title = input("Введіть назву нотатки для редагування тегів: ").strip()
+            if not title:
+                print(Fore.RED + "⚠️ Назва не може бути порожньою.")
+                return
+        else:
+            title = parts[2]
 
-        try:
-            results = notebook.search_by_title(title)
-            if not results:
-                raise NoteNotFound()
-            index, note = results[0]
-
-            print("Нові теги через пробіл: ", end="")
-            tags = input().strip().split()
-            note.replace_tags(tags)
-            print(Fore.GREEN + "✅ Теги оновлено.")
-        except Exception as e:
-            print(Fore.RED + f"❌ Помилка: {e}")
+        found = _find_note_exact(notebook, title)
+        if not found:
+            print(Fore.RED + f"❌ Нотатку з назвою '{title}' не знайдено.")
+            return
+        index, note = found
+        tags_input = input("Нові теги через пробіл: ").strip()
+        tags = tags_input.split() if tags_input else []
+        note.replace_tags(*tags)
+        print(Fore.GREEN + "✅ Теги оновлено.")
 
     # Видалення тегу з нотатки
-    elif action == "delete" and len(parts) >= 4 and parts[1] == "tag":
-        title = parts[2]
-        tag_to_delete = parts[3]
+    elif action == "delete" and len(parts) >= 2 and parts[1] == "tag":
+        if len(parts) == 2:
+            title = input("Введіть назву нотатки для видалення тегу: ").strip()
+            if not title:
+                print(Fore.RED + "⚠️ Назва не може бути порожньою.")
+                return
 
-        try:
-            results = notebook.search_by_title(title)
-            if not results:
-                raise NoteNotFound()
-            index, note = results[0]
+            found = _find_note_exact(notebook, title)
+            if not found:
+                print(Fore.RED + f"❌ Нотатку з назвою '{title}' не знайдено.")
+                return
+
+            tag_to_delete = input("Введіть тег для видалення: ").strip()
+            if not tag_to_delete:
+                print(Fore.RED + "⚠️ Тег не може бути порожнім.")
+                return
+
+        elif len(parts) == 3:
+            title = parts[2]
+            found = _find_note_exact(notebook, title)
+            if not found:
+                print(Fore.RED + f"❌ Нотатку з назвою '{title}' не знайдено.")
+                return
+
+            tag_to_delete = input("Введіть тег для видалення: ").strip()
+            if not tag_to_delete:
+                print(Fore.RED + "⚠️ Тег не може бути порожнім.")
+                return
+
+        else:
+            title = parts[2]
+            tag_to_delete = parts[3]
+            found = _find_note_exact(notebook, title)
+            if not found:
+                print(Fore.RED + f"❌ Нотатку з назвою '{title}' не знайдено.")
+                return
+
+        index, note = found
+        if tag_to_delete not in note.tags_list:
+            print(Fore.YELLOW + f"⚠️ Тег '{tag_to_delete}' не знайдено у нотатці.")
+        else:
             note.delete_tags(tag_to_delete)
             print(Fore.GREEN + f"🗑️ Тег '{tag_to_delete}' видалено.")
-        except Exception as e:
-            print(Fore.RED + f"❌ Помилка: {e}")
 
     # Видалення нотатки
-    elif action == "delete" and len(parts) >= 3 and parts[1] == "note":
-        title = parts[2]
+    elif action == "delete" and len(parts) >= 2 and parts[1] == "note":
+        if len(parts) == 2:
+            title = input("Введіть назву нотатки для видалення: ").strip()
+            if not title:
+                print(Fore.RED + "⚠️ Назва не може бути порожньою.")
+                return
+        else:
+            title = parts[2]
 
-        try:
-            results = notebook.search_by_title(title)
-            if not results:
-                raise NoteNotFound()
-            index, _ = results[0]
-            notebook.delete_note(index)
-            print(Fore.GREEN + f"🗑️ Нотатку '{title}' видалено.")
-        except Exception as e:
-            print(Fore.RED + f"❌ Помилка: {e}")
+        found = _find_note_exact(notebook, title)
+        if not found:
+            print(Fore.RED + f"❌ Нотатку з назвою '{title}' не знайдено.")
+            return
+        index, _ = found
+        notebook.delete_note(index)
+        print(Fore.GREEN + f"🗑️ Нотатку '{title}' видалено.")
 
     # Пошук нотатки
-    elif action == "search" and len(parts) >= 3 and parts[1] == "note":
-        keyword = " ".join(parts[2:])
+    elif action == "search" and len(parts) >= 2 and parts[1] == "note":
+        if len(parts) == 2:
+            keyword = input("Введіть фразу для пошуку: ").strip()
+            if not keyword:
+                print(Fore.RED + "⚠️ Пошуковий запит не може бути порожнім.")
+                return
+        else:
+            keyword = " ".join(parts[2:])
         results = notebook.search(keyword)
         for _, n in results:
             print(n)
