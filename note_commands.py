@@ -38,8 +38,17 @@ def handle_note_command(command: str, notebook: NoteBook):
 
     # Додавання нової нотатки
     if action == "add" and len(parts) >= 3 and parts[1] == "note":
-        title = parts[2].strip('"')
-        text = " ".join(parts[3:]).strip('"')
+        # Parse quoted strings properly
+        import re
+        # Find all quoted strings in the command
+        quoted_parts = re.findall(r'"([^"]*)"', command)
+        if len(quoted_parts) >= 2:
+            title = quoted_parts[0]
+            text = quoted_parts[1]
+        else:
+            # Fallback to original parsing if quotes are not used properly
+            title = parts[2].strip('"')
+            text = " ".join(parts[3:]).strip('"')
 
         try:
             note = Note(title, text)

@@ -8,12 +8,12 @@ contact_commands.py — модуль для обробки команд конт
 from colorama import Fore
 from books import AddressBook, Record
 from books.address_book.error import (
-    NameAlreadyExistsError,
-    NameNotFoundError,
-    PhoneAlreadyExistsError,
-    EmailAlreadyExistsError,
-    AddressAlreadyExistsError,
-    BirthdayAlreadyExistsError,
+    ContactNotFound,
+    ContactAlreadyExist,
+    ContactPhoneAlreadyExist,
+    ContactEmailAlreadyExist,
+    ContactAddressAlreadyExist,
+    ContactBirthdayAlreadyExist,
 )
 
 def handle_contact_command(command: str, book: AddressBook) -> None:
@@ -72,6 +72,16 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
             book.add_record(record)
             print(Fore.GREEN + f"✅ Контакт '{name}' додано!")
 
+        except ContactAlreadyExist:
+            print(Fore.RED + f"❌ Контакт '{name}' вже існує!")
+        except ContactPhoneAlreadyExist:
+            print(Fore.RED + f"❌ Телефон '{phone}' вже існує у контакті!")
+        except ContactEmailAlreadyExist:
+            print(Fore.RED + f"❌ Email '{email}' вже існує у контакті!")
+        except ContactAddressAlreadyExist:
+            print(Fore.RED + f"❌ Адреса вже існує у контакті!")
+        except ContactBirthdayAlreadyExist:
+            print(Fore.RED + f"❌ День народження вже існує у контакті!")
         except Exception as e:
             print(Fore.RED + f"❌ Помилка: {e}")
 
@@ -104,6 +114,16 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
                 record.edit_birthday(birthday)
 
             print(Fore.GREEN + f"✅ Контакт '{name}' оновлено!")
+        except ContactNotFound:
+            print(Fore.RED + f"❌ Контакт '{name}' не знайдено!")
+        except ContactPhoneAlreadyExist:
+            print(Fore.RED + f"❌ Телефон '{phone}' вже існує у контакті!")
+        except ContactEmailAlreadyExist:
+            print(Fore.RED + f"❌ Email '{email}' вже існує у контакті!")
+        except ContactAddressAlreadyExist:
+            print(Fore.RED + f"❌ Адреса вже існує у контакті!")
+        except ContactBirthdayAlreadyExist:
+            print(Fore.RED + f"❌ День народження вже існує у контакті!")
         except Exception as e:
             print(Fore.RED + f"❌ Помилка: {e}")
 
@@ -116,6 +136,8 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
         try:
             book.delete_record(name)
             print(Fore.GREEN + f"🗑️ Контакт '{name}' видалено.")
+        except ContactNotFound:
+            print(Fore.RED + f"❌ Контакт '{name}' не знайдено!")
         except Exception as e:
             print(Fore.RED + f"❌ Помилка: {e}")
 
@@ -127,6 +149,8 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
         name = " ".join(parts[2:])
         try:
             print(book.find(name))
+        except ContactNotFound:
+            print(Fore.RED + f"❌ Контакт '{name}' не знайдено!")
         except Exception as e:
             print(Fore.RED + f"❌ Помилка: {e}")
 
@@ -139,7 +163,7 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
             print(record)
 
     # Показ майбутніх днів народження
-    elif parts[0] == "show" and parts[1] == "birthdays":
+    elif len(parts) >= 2 and parts[0] == "show" and parts[1] == "birthdays":
         """
         Показує список контактів, у яких день народження
         настане протягом вказаної кількості днів.
@@ -149,11 +173,13 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
             records = book.upcoming_birthdays_by_days(days)
             for r in records:
                 print(r)
+        except ValueError:
+            print(Fore.RED + f"❌ Невірний формат кількості днів. Введіть число!")
         except Exception as e:
             print(Fore.RED + f"❌ Помилка: {e}")
 
     # Пошук контактів
-    elif parts[0] == "search" and parts[1] == "contact":
+    elif len(parts) >= 2 and parts[0] == "search" and parts[1] == "contact":
         """
         Пошук контактів за ключовим словом у імені, телефоні, email тощо.
         """

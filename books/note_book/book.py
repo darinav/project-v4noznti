@@ -163,3 +163,24 @@ class NoteBook(UserDict):
             {idx for idx, note in self.items() if keyword and keyword in note.text},
             {idx for idx, note in self.items() if keyword and keyword in note.tags},
         )
+
+    def find_note_index_by_title(self, title: str) -> int | None:
+        """ Find and return the note index by title, or None if not found
+
+        :param title: note title (string, mandatory)
+        :return: note index if found, None otherwise (int | None)
+        """
+        for idx, note in self.items():
+            if note.title == title:
+                return idx
+        return None
+
+    def delete_note_by_title(self, title: str) -> None:
+        """ Remove the note record by title, or raise the note not found exception
+
+        :param title: note title (string, mandatory)
+        """
+        index = self.find_note_index_by_title(title)
+        if index is None:
+            raise NoteNotFound()
+        self.delete_note(index)
