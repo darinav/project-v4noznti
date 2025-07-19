@@ -123,7 +123,6 @@ def main():
             ).strip()
 
             if section == "0":
-                save_data(address_book, note_book)
                 print(Fore.GREEN + "👋 До побачення!")
                 break
 
@@ -140,23 +139,35 @@ def main():
                 print(Fore.RED + "⚠️ Невідома опція. Спробуйте ще раз.")
 
         elif active_mode == "contacts":
-            command = input(Fore.BLUE + "[Контакти] >>> ").strip()
-
-            if command.lower() in ("exit", "close"):
+            result = run_mode(
+                "contacts",
+                Fore.BLUE + "[Контакти] >>> ",
+                CONTACT_COMMANDS,
+                handle_contact_command,
+                address_book,
+            )
+            if result == "exit":
                 break
-            active_mode = next_mode
+            if result in ("contacts", "notes"):
+                active_mode = result
+            else:
+                continue
 
         elif active_mode == "notes":
-            next_mode = run_mode(
+            result = run_mode(
                 "notes",
                 Fore.YELLOW + "[Нотатки] >>> ",
                 NOTE_COMMANDS,
                 handle_note_command,
                 note_book,
             )
-            if next_mode == "exit":
+            if result == "exit":
                 break
-            active_mode = next_mode
+            if result in ("contacts", "notes"):
+                active_mode = result
+            else:
+                continue
+
 
 if __name__ == "__main__":
     main()
