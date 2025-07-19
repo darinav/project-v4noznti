@@ -11,6 +11,8 @@ from contact_commands import handle_contact_command
 from note_commands import handle_note_command
 from cli.guess_command.guess_command import handle_command_with_guess
 from cli.guess_command.possible_commands import CONTACT_COMMANDS, NOTE_COMMANDS, GENERAL_COMMANDS
+from storage import save_data, load_data
+
 
 # Ініціалізація кольорового виводу для CLI
 init(autoreset=True)
@@ -105,8 +107,9 @@ def main():
 
     Головний цикл програми завершується при введенні 'exit' або 'close'.
     """
-    address_book = AddressBook()
-    note_book = NoteBook()
+    # address_book = AddressBook()
+    # note_book = NoteBook()
+    address_book, note_book = load_data()
 
     print(Fore.GREEN + "\n👋 Вітаємо у Персональному помічнику!")
 
@@ -120,6 +123,7 @@ def main():
             ).strip()
 
             if section == "0":
+                save_data(address_book, note_book)
                 print(Fore.GREEN + "👋 До побачення!")
                 break
 
@@ -136,14 +140,9 @@ def main():
                 print(Fore.RED + "⚠️ Невідома опція. Спробуйте ще раз.")
 
         elif active_mode == "contacts":
-            next_mode = run_mode(
-                "contacts",
-                Fore.BLUE + "[Контакти] >>> ",
-                CONTACT_COMMANDS,
-                handle_contact_command,
-                address_book,
-            )
-            if next_mode == "exit":
+            command = input(Fore.BLUE + "[Контакти] >>> ").strip()
+
+            if command.lower() in ("exit", "close"):
                 break
             active_mode = next_mode
 
