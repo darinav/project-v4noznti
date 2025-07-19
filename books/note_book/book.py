@@ -49,7 +49,7 @@ class NoteBook(UserDict):
 
         :return: set of the notes titles (set of str)
         """
-        return {n.title for n in self.values()}
+        return {n.title for n in self.data.values()}
 
     def notes(self, order: SortOrder = SortOrder.index) -> list[tuple[int, Note]]:
         """ Return the sorted notes with indices
@@ -58,11 +58,11 @@ class NoteBook(UserDict):
         :return: list of the note records (list of tuple int, Note)
         """
         if order == NoteBook.SortOrder.index:
-            return [(idx, note) for idx, note in self.items()]
+            return [(idx, note) for idx, note in self.data.items()]
 
         return [
             (idx, note) for idx, note in sorted(
-                self.items(),
+                self.data.items(),
                 key=lambda item: (item[1].tags if order == NoteBook.SortOrder.tags else item[1].title).lower()
             )
         ]
@@ -122,7 +122,7 @@ class NoteBook(UserDict):
             if isinstance(result, set):
                 found_keys.update(result)
         # Return found records
-        return [(idx, note) for idx, note in self.items() if idx in found_keys]
+        return [(idx, note) for idx, note in self.data.items() if idx in found_keys]
 
     def search_by_title(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the title
@@ -130,8 +130,12 @@ class NoteBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found notes (list of tuple int, Note)
         """
+        # Convert the keyword to lower case
+        keyword = keyword.lower() or ""
         # Return the found notes
-        return self.__search_merge({idx for idx, note in self.items() if keyword and keyword in note.title})
+        return self.__search_merge(
+            {idx for idx, note in self.data.items() if keyword and keyword in note.title.lower()}
+        )
 
     def search_by_text(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the text
@@ -139,8 +143,12 @@ class NoteBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found notes (list of tuple int, Note)
         """
+        # Convert the keyword to lower case
+        keyword = keyword.lower() or ""
         # Return the found notes
-        return self.__search_merge({idx for idx, note in self.items() if keyword and keyword in note.text})
+        return self.__search_merge(
+            {idx for idx, note in self.data.items() if keyword and keyword in note.text.lower()}
+        )
 
     def search_by_tag(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the tags
@@ -148,8 +156,12 @@ class NoteBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found notes (list of tuple int, Note)
         """
+        # Convert the keyword to lower case
+        keyword = keyword.lower() or ""
         # Return the found notes
-        return self.__search_merge({idx for idx, note in self.items() if keyword and keyword in note.tags})
+        return self.__search_merge(
+            {idx for idx, note in self.data.items() if keyword and keyword in note.tags.lower()}
+        )
 
     def search(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the title, text and tags
@@ -157,9 +169,11 @@ class NoteBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found notes (list of tuple int, Note)
         """
+        # Convert the keyword to lower case
+        keyword = keyword.lower() or ""
         # Return the found notes
         return self.__search_merge(
-            {idx for idx, note in self.items() if keyword and keyword in note.title},
-            {idx for idx, note in self.items() if keyword and keyword in note.text},
-            {idx for idx, note in self.items() if keyword and keyword in note.tags},
+            {idx for idx, note in self.data.items() if keyword and keyword in note.title.lower()},
+            {idx for idx, note in self.data.items() if keyword and keyword in note.text.lower()},
+            {idx for idx, note in self.data.items() if keyword and keyword in note.tags.lower()},
         )
