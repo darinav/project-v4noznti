@@ -1,5 +1,9 @@
 import pickle
 from pathlib import Path
+from books import AddressBook
+from books import NoteBook
+
+
 DATA_FILE = Path("data.pkl")
 
 def save_data(address_book, note_book):
@@ -9,10 +13,10 @@ def save_data(address_book, note_book):
 
 def load_data():
     """Loads address book and note book or creates new ones"""
-if DATA_FILE.exists():
-    with open(DATA_FILE, "rb") as f:
-        data = pickle.load(f)
-        return data.get("contacts"), data.get("notes")
+    if DATA_FILE.exists():
+        with open(DATA_FILE, "rb") as f:
+            data = pickle.load(f)
+            return data.get("contacts"), data.get("notes")
     return AddressBook(), NoteBook()
 
 
