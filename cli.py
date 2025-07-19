@@ -9,6 +9,7 @@ from colorama import init, Fore, Style
 from books import AddressBook, NoteBook
 from contact_commands import handle_contact_command
 from note_commands import handle_note_command
+from storage import save_data, load_data
 
 # Ініціалізація кольорового виводу для CLI
 init(autoreset=True)
@@ -76,8 +77,9 @@ def main():
 
     Головний цикл програми завершується при введенні 'exit' або 'close'.
     """
-    address_book = AddressBook()
-    note_book = NoteBook()
+    # address_book = AddressBook()
+    # note_book = NoteBook()
+    address_book, note_book = load_data()
 
     print(Fore.GREEN + "\n👋 Вітаємо у Персональному помічнику!")
 
@@ -91,6 +93,7 @@ def main():
             ).strip()
 
             if section == "0":
+                save_data(address_book, note_book)
                 print(Fore.GREEN + "👋 До побачення!")
                 break
 
@@ -110,6 +113,8 @@ def main():
             command = input(Fore.BLUE + "[Контакти] >>> ").strip()
 
             if command.lower() in ("exit", "close"):
+                save_data(address_book, note_book)
+                print(Fore.GREEN + "👋 До побачення!")
                 break
 
             elif command.lower() == "switch":
@@ -126,6 +131,8 @@ def main():
             command = input(Fore.YELLOW + "[Нотатки] >>> ").strip()
 
             if command.lower() in ("exit", "close"):
+                save_data(address_book, note_book)
+                print(Fore.GREEN + "👋 До побачення!")
                 break
 
             elif command.lower() == "switch":
