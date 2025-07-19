@@ -131,7 +131,8 @@ class NoteBook(UserDict):
         :return: found notes (list of tuple int, Note)
         """
         # Return the found notes
-        return self.__search_merge({idx for idx, note in self.items() if keyword and keyword in note.title})
+        keyword_lower = keyword.lower() if keyword else ""
+        return self.__search_merge({idx for idx, note in self.items() if keyword_lower and keyword_lower in note.title.lower()})
 
     def search_by_text(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the text
@@ -140,7 +141,8 @@ class NoteBook(UserDict):
         :return: found notes (list of tuple int, Note)
         """
         # Return the found notes
-        return self.__search_merge({idx for idx, note in self.items() if keyword and keyword in note.text})
+        keyword_lower = keyword.lower() if keyword else ""
+        return self.__search_merge({idx for idx, note in self.items() if keyword_lower and keyword_lower in note.text.lower()})
 
     def search_by_tag(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the tags
@@ -149,7 +151,8 @@ class NoteBook(UserDict):
         :return: found notes (list of tuple int, Note)
         """
         # Return the found notes
-        return self.__search_merge({idx for idx, note in self.items() if keyword and keyword in note.tags})
+        keyword_lower = keyword.lower() if keyword else ""
+        return self.__search_merge({idx for idx, note in self.items() if keyword_lower and keyword_lower in note.tags.lower()})
 
     def search(self, keyword: str) -> list[tuple[int, Note]]:
         """ Search and return the notes with indices by keyword/sequence in the title, text and tags
@@ -158,8 +161,31 @@ class NoteBook(UserDict):
         :return: found notes (list of tuple int, Note)
         """
         # Return the found notes
+        keyword_lower = keyword.lower() if keyword else ""
         return self.__search_merge(
-            {idx for idx, note in self.items() if keyword and keyword in note.title},
-            {idx for idx, note in self.items() if keyword and keyword in note.text},
-            {idx for idx, note in self.items() if keyword and keyword in note.tags},
+            {idx for idx, note in self.items() if keyword_lower and keyword_lower in note.title.lower()},
+            {idx for idx, note in self.items() if keyword_lower and keyword_lower in note.text.lower()},
+            {idx for idx, note in self.items() if keyword_lower and keyword_lower in note.tags.lower()},
         )
+
+    def find_note_index_by_title(self, title: str) -> int:
+        """ Find note index by title
+
+        :param title: note title (string, mandatory)
+        :return: note index (int) or None if not found
+        """
+        for idx, note in self.items():
+            if note.title == title:
+                return idx
+        return None
+
+    def delete_note_by_title(self, title: str) -> None:
+        """ Delete note by title
+
+        :param title: note title (string, mandatory)
+        :raises: NoteNotFound if note with given title doesn't exist
+        """
+        index = self.find_note_index_by_title(title)
+        if index is None:
+            raise NoteNotFound()
+        self.delete_note(index)

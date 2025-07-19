@@ -222,7 +222,13 @@ class Note:
 
         :param args: tag values (any type, optional)
         :return: all tags lexicographically sorted in string representation (string)
+        :raises: ValueError if any tag doesn't exist
         """
+        # Check if all tags exist before deleting
+        for tag in args:
+            if not self.is_tag_exist(tag):
+                raise ValueError(f"Tag '{tag}' does not exist")
+        
         self.__tags -= Tags(*args)
         return self.tags
 

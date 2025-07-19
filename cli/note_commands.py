@@ -5,6 +5,11 @@ note_commands.py — модуль для обробки команд нотат�
 у межах об'єкта NoteBook.
 """
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import shlex
 from colorama import Fore
 from books import NoteBook, Note
 from books.note_book.error import *
@@ -28,7 +33,11 @@ def handle_note_command(command: str, notebook: NoteBook):
         - show all notes
         - sort notes by tag
     """
-    parts = command.strip().split()
+    try:
+        parts = shlex.split(command.strip())
+    except ValueError:
+        # If shlex parsing fails, fall back to regular split
+        parts = command.strip().split()
 
     if not parts:
         print(Fore.RED + "⚠️ Порожня команда.")
@@ -50,14 +59,19 @@ def handle_note_command(command: str, notebook: NoteBook):
 
     # Редагування тексту нотатки
     elif action == "edit" and len(parts) >= 3 and parts[1] == "note":
-        title = parts[2]
+        # Handle multiword titles with quotes
+        if len(parts) == 3:
+            title = parts[2].strip('"')
+        else:
+            # Join all parts from index 2 onwards and strip quotes
+            title = " ".join(parts[2:]).strip('"')
 
         try:
             index = notebook.find_note_index_by_title(title)
             if index is None:
-                raise NoteNotFound(title)
+                raise NoteNotFound()
 
-            note = notebook.get_note(index)
+            index, note = notebook.get_note(index)
 
             print("Новий текст нотатки: ", end="")
             new_text = input().strip()
@@ -68,14 +82,19 @@ def handle_note_command(command: str, notebook: NoteBook):
 
     # Редагування тегів у нотатці
     elif action == "edit" and len(parts) >= 3 and parts[1] == "tag":
-        title = parts[2]
+        # Handle multiword titles with quotes
+        if len(parts) == 3:
+            title = parts[2].strip('"')
+        else:
+            # Join all parts from index 2 onwards and strip quotes
+            title = " ".join(parts[2:]).strip('"')
 
         try:
             index = notebook.find_note_index_by_title(title)
             if index is None:
-                raise NoteNotFound(title)
+                raise NoteNotFound()
 
-            note = notebook.get_note(index)
+            index, note = notebook.get_note(index)
 
             print("Нові теги через пробіл: ", end="")
             tags = input().strip().split()
@@ -86,15 +105,25 @@ def handle_note_command(command: str, notebook: NoteBook):
 
     # Видалення тегу з нотатки
     elif action == "delete" and len(parts) >= 4 and parts[1] == "tag":
-        title = parts[2]
-        tag_to_delete = parts[3]
+        # Handle multiword titles with quotes
+        # If title is quoted, it will be a single element after shlex parsing
+        # If title is unquoted multiword, we need to join elements until the last one (which is the tag)
+        if len(parts) == 4:
+            # Simple case: delete tag "title" tag or delete tag title tag
+            title = parts[2].strip('"')
+            tag_to_delete = parts[3]
+        else:
+            # Complex case: delete tag multiword title tag
+            # The last element is the tag, everything from index 2 to -1 is the title
+            title = " ".join(parts[2:-1]).strip('"')
+            tag_to_delete = parts[-1]
 
         try:
             index = notebook.find_note_index_by_title(title)
             if index is None:
-                raise NoteNotFound(title)
+                raise NoteNotFound()
 
-            note = notebook.get_note(index)
+            index, note = notebook.get_note(index)
             note.delete_tags(tag_to_delete)
             print(Fore.GREEN + f"🗑️ Тег '{tag_to_delete}' видалено.")
         except Exception as e:
@@ -102,7 +131,12 @@ def handle_note_command(command: str, notebook: NoteBook):
 
     # Видалення нотатки
     elif action == "delete" and len(parts) >= 3 and parts[1] == "note":
-        title = parts[2]
+        # Handle multiword titles with quotes
+        if len(parts) == 3:
+            title = parts[2].strip('"')
+        else:
+            # Join all parts from index 2 onwards and strip quotes
+            title = " ".join(parts[2:]).strip('"')
 
         try:
             notebook.delete_note_by_title(title)
@@ -115,20 +149,20 @@ def handle_note_command(command: str, notebook: NoteBook):
         keyword = " ".join(parts[2:])
         results = notebook.search(keyword)
 
-        for n in results:
-            print(n)
+        for index, note in results:
+            print(note)
 
     # Показ усіх нотаток
     elif command == "show all notes":
-        for note in notebook.notes():
+        for index, note in notebook.notes():
             print(note)
 
     # Сортування нотаток за тегами
     elif command == "sort notes by tag":
-        notes = notebook.notes(order="tags")
+        notes = notebook.notes(order=NoteBook.SortOrder.tags)
 
-        for n in notes:
-            print(n)
+        for index, note in notes:
+            print(note)
 
     # Невідома команда
     else:
