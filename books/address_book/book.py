@@ -120,20 +120,19 @@ class AddressBook(UserDict):
     def upcoming_birthdays(
             self,
             upcoming_birthdays_period: Optional[int] = None,
-    ) -> list[tuple[Record, datetime.date]]:
+    ) -> Iterator[tuple[Record, datetime.date]]:
         """Return all contacts whose birthday is within the next period, including today,
         along with the congratulation date. If the birthday falls on a weekend, the congratulation date
         is moved to the following Monday.
 
         :param upcoming_birthdays_period: the birthday congratulations days range (int, optional)
         :return: The next contacts whose birthday is within the next period, including today,
-        along with the congratulation date (list of tuple)
+        along with the congratulation date (iterator of tuple)
         """
 
         # Named tuple creation
         UpcomingBirthday = namedtuple('UpcomingBirthday', ['contact', 'congratulation_date'])
 
-        result = []
         today: datetime.date = datetime.datetime.today().date()
         for contact in self.data.values():
             if (
@@ -143,9 +142,8 @@ class AddressBook(UserDict):
                         upcoming_birthdays_period=upcoming_birthdays_period,
                     )
             ) is not None:
-                # Add the upcoming birthday contact and the congratulation date
-                result.append(UpcomingBirthday(contact, congratulation_date))
-        return result
+                # Yield the upcoming birthday contact and the congratulation date
+                yield UpcomingBirthday(contact, congratulation_date)
 
     def upcoming_birthdays_by_days(
             self,

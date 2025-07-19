@@ -171,14 +171,18 @@ class TestAddressBook:
         
         # This test depends on current date, so we'll just check it doesn't crash
         birthdays = self.book.upcoming_birthdays()
-        assert isinstance(birthdays, list)
+        # Convert iterator to list to check it works
+        birthdays_list = list(birthdays)
+        assert isinstance(birthdays_list, list)
 
     def test_upcoming_birthdays_custom_period(self):
         """Test upcoming birthdays with custom period."""
         self.book.add_record(self.record1)
         
         birthdays = self.book.upcoming_birthdays(30)
-        assert isinstance(birthdays, list)
+        # Convert iterator to list to check it works
+        birthdays_list = list(birthdays)
+        assert isinstance(birthdays_list, list)
 
     def test_upcoming_birthdays_by_days_default(self):
         """Test upcoming_birthdays_by_days with default period."""
@@ -208,7 +212,8 @@ class TestAddressBook:
         # Test the private method through upcoming_birthdays
         birthdays = self.book.upcoming_birthdays(10)
         # Should include the record since birthday is within 10 days
-        assert isinstance(birthdays, list)
+        birthdays_list = list(birthdays)
+        assert isinstance(birthdays_list, list)
 
     def test_congratulation_date_weekend_adjustment(self):
         """Test that congratulation dates are adjusted for weekends."""
@@ -250,7 +255,8 @@ class TestAddressBook:
         
         # Upcoming birthdays on empty book
         birthdays = self.book.upcoming_birthdays()
-        assert len(birthdays) == 0
+        birthdays_list = list(birthdays)
+        assert len(birthdays_list) == 0
         
         # Iterator on empty book
         records = list(self.book)
@@ -302,7 +308,8 @@ class TestAddressBook:
         
         # Should not crash when checking birthdays
         birthdays = self.book.upcoming_birthdays()
-        assert isinstance(birthdays, list)
+        birthdays_list = list(birthdays)
+        assert isinstance(birthdays_list, list)
 
     def test_search_merge_functionality(self):
         """Test the internal search merge functionality."""
