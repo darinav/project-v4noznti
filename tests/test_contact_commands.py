@@ -243,12 +243,15 @@ class TestContactCommands:
         captured = capsys.readouterr()
         assert "⚠️ Невідома команда для контактів." in captured.out
 
-    def test_incomplete_add_command(self, capsys):
-        """Test incomplete add command."""
+    @patch('builtins.input')
+    def test_incomplete_add_command(self, mock_input, capsys):
+        """Test incomplete add command now prompts for missing parameters."""
+        mock_input.side_effect = ["John Smith", "", "", "", ""]
+        
         handle_contact_command("add contact", self.book)
         
         captured = capsys.readouterr()
-        assert "⚠️ Невідома команда для контактів." in captured.out
+        assert "✅ Контакт 'John Smith' додано!" in captured.out
 
     def test_incomplete_edit_command(self, capsys):
         """Test incomplete edit command."""

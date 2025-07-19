@@ -19,6 +19,7 @@ from books.address_book.error import (
     ContactAddressAlreadyExist,
     ContactBirthdayAlreadyExist,
 )
+from .command_suggestions import command_suggester
 
 def handle_contact_command(command: str, book: AddressBook) -> None:
     """
@@ -45,12 +46,21 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
     action = parts[0].lower()
 
     # Додавання нового контакту
-    if action == "add" and len(parts) >= 3 and parts[1] == "contact":
+    if action == "add" and len(parts) >= 2 and parts[1] == "contact":
         """
         Додає новий контакт із введеним ім’ям, телефоном, email,
         адресою та днем народження.
         """
-        name = " ".join(parts[2:])
+        if len(parts) < 3:
+            # Handle incomplete "add contact" command by prompting for missing parameters
+            print(Fore.YELLOW + "Введіть ім'я контакту: ", end="")
+            name = input().strip()
+            if not name:
+                print(Fore.RED + "❌ Ім'я контакту не може бути порожнім.")
+                return
+        else:
+            name = " ".join(parts[2:])
+            
         try:
             record = Record(name)
             print(Fore.YELLOW + "Введіть телефон (або Enter): ", end="")
@@ -179,7 +189,7 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
             print(record)
 
     # Показ майбутніх днів народження
-    elif parts[0] == "show" and parts[1] == "birthdays":
+    elif len(parts) >= 2 and parts[0] == "show" and parts[1] == "birthdays":
         """
         Показує список контактів, у яких день народження
         настане протягом вказаної кількості днів.
@@ -193,7 +203,7 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
             print(Fore.RED + f"❌ Помилка: {e}")
 
     # Пошук контактів
-    elif parts[0] == "search" and parts[1] == "contact":
+    elif len(parts) >= 2 and parts[0] == "search" and parts[1] == "contact":
         """
         Пошук контактів за ключовим словом у імені, телефоні, email тощо.
         """
@@ -202,9 +212,25 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
         for r in results:
             print(r)
 
-    # Невідома команда
+    # Невідома команда з інтерактивними пропозиціями
     else:
         """
-        Виводить повідомлення про помилку у випадку невідомої команди.
+        Виводить повідомлення про помилку з пропозицією найкращої команди та інтерактивним підтвердженням.
         """
-        print(Fore.RED + "⚠️ Невідома команда для контактів.")
+        suggestion_message, suggested_command = command_suggester.suggest_command_interactive(command, "contact")
+        print(Fore.RED + suggestion_message)
+        
+        if suggested_command:
+            try:
+                user_response = input().strip().lower()
+                if user_response == 'y' or user_response == 'yes':
+                    print(Fore.CYAN + f"Виконую команду: {suggested_command}")
+                    handle_contact_command(suggested_command, book)
+                elif user_response == 'n' or user_response == 'no':
+                    pass  # Користувач відмовився, нічого не робимо
+                else:
+                    print(Fore.YELLOW + "Будь ласка, введіть 'y' або 'n'.")
+            except KeyboardInterrupt:
+                print(Fore.YELLOW + "\nОперацію скасовано.")
+            except Exception as e:
+                print(Fore.RED + f"❌ Помилка при виконанні команди: {e}")

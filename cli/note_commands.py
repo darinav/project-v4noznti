@@ -13,6 +13,7 @@ import shlex
 from colorama import Fore
 from books import NoteBook, Note
 from books.note_book.error import *
+from .command_suggestions import command_suggester
 
 
 def handle_note_command(command: str, notebook: NoteBook):
@@ -46,9 +47,22 @@ def handle_note_command(command: str, notebook: NoteBook):
     action = parts[0].lower()
 
     # Додавання нової нотатки
-    if action == "add" and len(parts) >= 3 and parts[1] == "note":
-        title = parts[2].strip('"')
-        text = " ".join(parts[3:]).strip('"')
+    if action == "add" and len(parts) >= 2 and parts[1] == "note":
+        if len(parts) < 3:
+            # Handle incomplete "add note" command by prompting for missing parameters
+            print(Fore.YELLOW + "Введіть назву нотатки: ", end="")
+            title = input().strip()
+            if not title:
+                print(Fore.RED + "❌ Назва нотатки не може бути порожньою.")
+                return
+            print(Fore.YELLOW + "Введіть текст нотатки: ", end="")
+            text = input().strip()
+            if not text:
+                print(Fore.RED + "❌ Текст нотатки не може бути порожнім.")
+                return
+        else:
+            title = parts[2].strip('"')
+            text = " ".join(parts[3:]).strip('"')
 
         try:
             note = Note(title, text)
@@ -164,6 +178,25 @@ def handle_note_command(command: str, notebook: NoteBook):
         for index, note in notes:
             print(note)
 
-    # Невідома команда
+    # Невідома команда з інтерактивними пропозиціями
     else:
-        print(Fore.RED + "⚠️ Невідома команда для нотаток.")
+        """
+        Виводить повідомлення про помилку з пропозицією найкращої команди та інтерактивним підтвердженням.
+        """
+        suggestion_message, suggested_command = command_suggester.suggest_command_interactive(command, "note")
+        print(Fore.RED + suggestion_message)
+        
+        if suggested_command:
+            try:
+                user_response = input().strip().lower()
+                if user_response == 'y' or user_response == 'yes':
+                    print(Fore.CYAN + f"Виконую команду: {suggested_command}")
+                    handle_note_command(suggested_command, notebook)
+                elif user_response == 'n' or user_response == 'no':
+                    pass  # Користувач відмовився, нічого не робимо
+                else:
+                    print(Fore.YELLOW + "Будь ласка, введіть 'y' або 'n'.")
+            except KeyboardInterrupt:
+                print(Fore.YELLOW + "\nОперацію скасовано.")
+            except Exception as e:
+                print(Fore.RED + f"❌ Помилка при виконанні команди: {e}")

@@ -55,12 +55,15 @@ class TestNoteCommands:
         captured = capsys.readouterr()
         assert "✅ Нотатку 'SimpleTitle' додано." in captured.out
 
-    def test_add_note_invalid(self, capsys):
-        """Test adding note with invalid parameters."""
+    @patch('builtins.input')
+    def test_add_note_invalid(self, mock_input, capsys):
+        """Test adding note with incomplete parameters now prompts for missing data."""
+        mock_input.side_effect = ["Test Title", "Test Content"]
+        
         handle_note_command('add note', self.notebook)
         
         captured = capsys.readouterr()
-        assert "⚠️ Невідома команда для нотаток." in captured.out
+        assert "✅ Нотатку 'Test Title' додано." in captured.out
 
     def test_add_note_exception(self, capsys):
         """Test adding note that causes exception."""
