@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "personal-assistant"
+version = "0.1.0"
+description = "CLI personal assistant for managing contacts and notes"
+authors = [{name = "project-group-3"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "colorama==0.4.6",
+    "phonenumbers==9.0.9"
+]
+
+[project.scripts]
+assistant = "cli:main"
+
+[tool.setuptools.packages.find]
+include = ["*"]
+
+
+[tool.setuptools]
+py-modules = [
+    "cli",
+    "contact_commands",
+    "note_commands",
+    "storage"
+]
