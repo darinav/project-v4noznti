@@ -10,6 +10,7 @@ from books import AddressBook, NoteBook
 from contact_commands import handle_contact_command
 from note_commands import handle_note_command
 
+
 # Ініціалізація кольорового виводу для CLI
 init(autoreset=True)
 

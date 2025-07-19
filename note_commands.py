@@ -11,7 +11,6 @@ from books.note_book.book import NoteBook as FullNoteBook
 NoteBook.SortOrder = FullNoteBook.SortOrder
 from books.note_book.error import *
 
-
 def handle_note_command(command: str, notebook: NoteBook):
     parts = command.strip().split()
 

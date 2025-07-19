@@ -8,13 +8,14 @@ contact_commands.py — модуль для обробки команд конт
 from colorama import Fore
 from books import AddressBook, Record
 from books.address_book.error import (
-    NameAlreadyExistsError,
-    NameNotFoundError,
-    PhoneAlreadyExistsError,
-    EmailAlreadyExistsError,
-    AddressAlreadyExistsError,
-    BirthdayAlreadyExistsError,
+    ContactAlreadyExist,
+    ContactNotFound,
+    ContactPhoneAlreadyExist,
+    ContactEmailAlreadyExist,
+    ContactAddressAlreadyExist,
+    ContactBirthdayAlreadyExist,
 )
+
 
 def handle_contact_command(command: str, book: AddressBook) -> None:
     """
