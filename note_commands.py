@@ -7,27 +7,12 @@ note_commands.py — модуль для обробки команд нотат�
 
 from colorama import Fore
 from books import NoteBook, Note
+from books.note_book.book import NoteBook as FullNoteBook
+NoteBook.SortOrder = FullNoteBook.SortOrder
 from books.note_book.error import *
 
 
 def handle_note_command(command: str, notebook: NoteBook):
-    """
-    Обробляє CLI-команди, пов’язані з нотатками.
-
-    Аргументи:
-        command (str): текст введеної команди.
-        notebook (NoteBook): об’єкт для зберігання і керування нотатками.
-
-    Підтримувані команди:
-        - add note "<title>" "<text>"
-        - edit note <title>
-        - edit tag <title>
-        - delete tag <title> <tag>
-        - delete note <title>
-        - search note <keyword>
-        - show all notes
-        - sort notes by tag
-    """
     parts = command.strip().split()
 
     if not parts:
@@ -53,11 +38,10 @@ def handle_note_command(command: str, notebook: NoteBook):
         title = parts[2]
 
         try:
-            index = notebook.find_note_index_by_title(title)
-            if index is None:
-                raise NoteNotFound(title)
-
-            note = notebook.get_note(index)
+            results = notebook.search_by_title(title)
+            if not results:
+                raise NoteNotFound()
+            index, note = results[0]
 
             print("Новий текст нотатки: ", end="")
             new_text = input().strip()
@@ -71,11 +55,10 @@ def handle_note_command(command: str, notebook: NoteBook):
         title = parts[2]
 
         try:
-            index = notebook.find_note_index_by_title(title)
-            if index is None:
-                raise NoteNotFound(title)
-
-            note = notebook.get_note(index)
+            results = notebook.search_by_title(title)
+            if not results:
+                raise NoteNotFound()
+            index, note = results[0]
 
             print("Нові теги через пробіл: ", end="")
             tags = input().strip().split()
@@ -90,11 +73,10 @@ def handle_note_command(command: str, notebook: NoteBook):
         tag_to_delete = parts[3]
 
         try:
-            index = notebook.find_note_index_by_title(title)
-            if index is None:
-                raise NoteNotFound(title)
-
-            note = notebook.get_note(index)
+            results = notebook.search_by_title(title)
+            if not results:
+                raise NoteNotFound()
+            index, note = results[0]
             note.delete_tags(tag_to_delete)
             print(Fore.GREEN + f"🗑️ Тег '{tag_to_delete}' видалено.")
         except Exception as e:
@@ -105,7 +87,11 @@ def handle_note_command(command: str, notebook: NoteBook):
         title = parts[2]
 
         try:
-            notebook.delete_note_by_title(title)
+            results = notebook.search_by_title(title)
+            if not results:
+                raise NoteNotFound()
+            index, _ = results[0]
+            notebook.delete_note(index)
             print(Fore.GREEN + f"🗑️ Нотатку '{title}' видалено.")
         except Exception as e:
             print(Fore.RED + f"❌ Помилка: {e}")
@@ -114,22 +100,19 @@ def handle_note_command(command: str, notebook: NoteBook):
     elif action == "search" and len(parts) >= 3 and parts[1] == "note":
         keyword = " ".join(parts[2:])
         results = notebook.search(keyword)
-
-        for n in results:
+        for _, n in results:
             print(n)
 
     # Показ усіх нотаток
     elif command == "show all notes":
-        for note in notebook.notes():
+        for _, note in notebook.notes():
             print(note)
 
     # Сортування нотаток за тегами
     elif command == "sort notes by tag":
-        notes = notebook.notes(order="tags")
-
-        for n in notes:
+        notes = notebook.notes(order=NoteBook.SortOrder.tags)
+        for _, n in notes:
             print(n)
 
-    # Невідома команда
     else:
         print(Fore.RED + "⚠️ Невідома команда для нотаток.")
