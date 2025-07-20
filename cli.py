@@ -9,8 +9,8 @@ from colorama import init, Fore, Style
 from books import AddressBook, NoteBook
 from contact_commands import handle_contact_command
 from note_commands import handle_note_command
-from cli.guess_command.guess_command import handle_command_with_guess
-from cli.guess_command.possible_commands import CONTACT_COMMANDS, NOTE_COMMANDS, GENERAL_COMMANDS
+from guess_command.guess_command import handle_command_with_guess
+from guess_command.possible_commands import CONTACT_COMMANDS, NOTE_COMMANDS, GENERAL_COMMANDS
 from storage import save_data, load_data
 
 

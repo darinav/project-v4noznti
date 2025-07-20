@@ -1,5 +1,5 @@
 import difflib
-from cli.guess_command.possible_commands import GENERAL_COMMANDS
+from guess_command.possible_commands import GENERAL_COMMANDS
 
 def _suggest_command(user_input: str, valid_commands: list[str], cutoff: float = 0.6) -> str | None:
     if not user_input or not valid_commands:
