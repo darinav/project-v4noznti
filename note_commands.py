@@ -15,6 +15,30 @@ def _find_note_exact(notebook: NoteBook, title: str):
     notes = [item for item in notebook.notes() if item[1].title == title]
     return notes[0] if notes else None
 
+def _print_notes_table(notes: list[Note]):
+    headers = [
+        "Назва",
+        "Текст",
+        "Теги"
+    ]
+    rows = []
+    for n in notes:
+        rows.append([n.title, n.text, n.tags])
+    if not rows:
+        print(Fore.YELLOW + "Немає нотаток для виводу.")
+        return
+
+    col_widths = [max(len(str(cell)) for cell in col) for col in zip(*([headers] + rows))]
+    def fmt_row(row):
+        return " │ ".join(str(cell).ljust(w) for cell, w in zip(row, col_widths))
+
+    border = "─┼─".join("─" * w for w in col_widths)
+
+    print(Fore.CYAN + fmt_row(headers))
+    print(Fore.MAGENTA + border)
+    for row in rows:
+        print(fmt_row(row))
+
 def handle_note_command(command: str, notebook: NoteBook):
     parts = command.strip().split()
 
@@ -163,20 +187,17 @@ def handle_note_command(command: str, notebook: NoteBook):
                 return
         else:
             keyword = " ".join(parts[2:])
-        results = notebook.search(keyword)
-        for _, n in results:
-            print(n)
+        notes = notebook.search(keyword)
+        _print_notes_table([note for _, note in notes])
 
     # Показ усіх нотаток
     elif command == "show all notes":
-        for _, note in notebook.notes():
-            print(note)
+        _print_notes_table([note for _, note in notebook.notes()])
 
     # Сортування нотаток за тегами
     elif command == "sort notes by tag":
         notes = notebook.notes(order=NoteBook.SortOrder.tags)
-        for _, n in notes:
-            print(n)
+        _print_notes_table([note for _, note in notes])
 
     else:
         print(Fore.RED + "⚠️ Невідома команда для нотаток.")

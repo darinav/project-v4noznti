@@ -169,10 +169,9 @@ class Note:
 
         :return: readable string (string)
         """
-        tags_str = ", ".join(self.tags_list) if self.tags_list else ""
         readable_string: str = f"Note title: {self.title}; text: {self.text}"
-        if tags_str:
-            readable_string += f"; tags: {tags_str}"
+        if self.tags_number > 0:
+            readable_string += f"; tags: {self.tags}"
         return readable_string
 
     @property

@@ -5,13 +5,12 @@ cli.py — Головний CLI-інтерфейс персонального п
 обробляє введення користувача та викликає відповідні обробники команд.
 """
 
-from colorama import init, Fore, Style
-from books import AddressBook, NoteBook
+from colorama import init, Fore
 from contact_commands import handle_contact_command
 from note_commands import handle_note_command
 from guess_command.guess_command import handle_command_with_guess
 from guess_command.possible_commands import CONTACT_COMMANDS, NOTE_COMMANDS, GENERAL_COMMANDS
-from storage import save_data, load_data
+from storage import init_books_data
 
 
 # Ініціалізація кольорового виводу для CLI
@@ -71,6 +70,7 @@ def print_help():
   exit / close         - вихід
 ''')
 
+
 def create_general_command_handler(current_mode):
     def handle_general_command(cmd):
         cmd_lower = cmd.lower()
@@ -81,6 +81,7 @@ def create_general_command_handler(current_mode):
         elif cmd_lower == "help":
             print_help()
     return handle_general_command
+
 
 def run_mode(mode_name, prompt, valid_commands, handler, book):
     general_handler = create_general_command_handler(mode_name)
@@ -107,66 +108,65 @@ def main():
 
     Головний цикл програми завершується при введенні 'exit' або 'close'.
     """
-    # address_book = AddressBook()
-    # note_book = NoteBook()
-    address_book, note_book = load_data()
 
-    print(Fore.GREEN + "\n👋 Вітаємо у Персональному помічнику!")
+    with init_books_data() as (address_book, note_book):
 
-    active_mode = None
+        print(Fore.GREEN + "\n👋 Вітаємо у Персональному помічнику!")
 
-    while True:
-        if active_mode is None:
-            print_main_menu()
-            section = input(
-                Fore.BLUE + "Оберіть розділ (0-3): "
-            ).strip()
+        active_mode = None
 
-            if section == "0":
-                print(Fore.GREEN + "👋 До побачення!")
-                break
+        while True:
+            if active_mode is None:
+                print_main_menu()
+                section = input(
+                    Fore.BLUE + "Оберіть розділ (0-3): "
+                ).strip()
 
-            elif section == "1":
-                active_mode = "contacts"
+                if section == "0":
+                    print(Fore.GREEN + "👋 До побачення!")
+                    break
 
-            elif section == "2":
-                active_mode = "notes"
+                elif section == "1":
+                    active_mode = "contacts"
 
-            elif section == "3" or section.lower() == "help":
-                print_help()
+                elif section == "2":
+                    active_mode = "notes"
 
-            else:
-                print(Fore.RED + "⚠️ Невідома опція. Спробуйте ще раз.")
+                elif section == "3" or section.lower() == "help":
+                    print_help()
 
-        elif active_mode == "contacts":
-            result = run_mode(
-                "contacts",
-                Fore.BLUE + "[Контакти] >>> ",
-                CONTACT_COMMANDS,
-                handle_contact_command,
-                address_book,
-            )
-            if result == "exit":
-                break
-            if result in ("contacts", "notes"):
-                active_mode = result
-            else:
-                continue
+                else:
+                    print(Fore.RED + "⚠️ Невідома опція. Спробуйте ще раз.")
 
-        elif active_mode == "notes":
-            result = run_mode(
-                "notes",
-                Fore.YELLOW + "[Нотатки] >>> ",
-                NOTE_COMMANDS,
-                handle_note_command,
-                note_book,
-            )
-            if result == "exit":
-                break
-            if result in ("contacts", "notes"):
-                active_mode = result
-            else:
-                continue
+            elif active_mode == "contacts":
+                result = run_mode(
+                    "contacts",
+                    Fore.BLUE + "[Контакти] >>> ",
+                    CONTACT_COMMANDS,
+                    handle_contact_command,
+                    address_book,
+                )
+                if result == "exit":
+                    break
+                if result in ("contacts", "notes"):
+                    active_mode = result
+                else:
+                    continue
+
+            elif active_mode == "notes":
+                result = run_mode(
+                    "notes",
+                    Fore.YELLOW + "[Нотатки] >>> ",
+                    NOTE_COMMANDS,
+                    handle_note_command,
+                    note_book,
+                )
+                if result == "exit":
+                    break
+                if result in ("contacts", "notes"):
+                    active_mode = result
+                else:
+                    continue
 
 
 if __name__ == "__main__":
