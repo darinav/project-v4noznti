@@ -169,10 +169,10 @@ class Note:
 
         :return: readable string (string)
         """
-
+        tags_str = ", ".join(self.tags_list) if self.tags_list else ""
         readable_string: str = f"Note title: {self.title}; text: {self.text}"
-        if self.tags_number > 0:
-            readable_string += f"; tags: {self.tags}"
+        if tags_str:
+            readable_string += f"; tags: {tags_str}"
         return readable_string
 
     @property
@@ -190,6 +190,11 @@ class Note:
         :return: all tags lexicographically sorted in string representation (string)
         """
         return str(self.__tags)
+
+    @property
+    def tags_list(self) -> list[str]:
+        """ Always returns a sorted list of string tags """
+        return sorted([str(tag) for tag in self.__tags])
 
     @property
     def tags_number(self) -> int:
