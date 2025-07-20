@@ -32,3 +32,6 @@ htmlcov/
 *.egg
 dist/
 build/
+
+# Data file
+data.pkl

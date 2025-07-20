@@ -32,7 +32,6 @@ class Name(Field):
 
         :param value: the value (string, mandatory)
         """
-        # Check whether the name is empty or None
         if not value:
             raise ContactNameMandatory()
         super().__init__(str(value))
@@ -53,7 +52,6 @@ class Birthday(Field):
         :param value: birthday string (string, mandatory)
         :return: birthday (datetime)
         """
-        # Check whether the birthday value is correct
         try:
             return datetime.datetime.strptime(value, "%d.%m.%Y").date()
         except ValueError:
@@ -76,7 +74,6 @@ class Birthday(Field):
         try:
             return self.value.replace(year=year)
         except ValueError:
-            # Handles February 29 in a non-leap year, shifts it to March 1
             return datetime.date(year, 3, 1)
 
     def __str__(self) -> str:
@@ -106,12 +103,9 @@ class Phone(Field):
         :return: sanitized phone number (string)
         """
 
-        # Check whether the phone number is empty or None
         if not value:
             raise ContactPhoneValueError()
-        # Clear the phone number from formatting symbols and whitespaces
         value = '+' + re.sub(cls.value_clear_pattern, '', value)
-        # Verify the phone number
         try:
             phone_number = phonenumbers.parse(value)
             if (
@@ -120,8 +114,7 @@ class Phone(Field):
                     (cls.strict or not phonenumbers.is_possible_number(phone_number))
             ):
                 raise ContactPhoneValueError()
-            # Format number in E164 standard
-            value = phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.E164)
+                value = phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.E164)
         except phonenumbers.NumberParseException:
             raise ContactPhoneValueError()
         return value
@@ -146,12 +139,9 @@ class Email(Field):
         :return: sanitized email (string)
         """
 
-        # Check whether the email is empty or None
         if not value:
             raise ContactEmailValueError()
-        # Clear the email from whitespaces
         value = re.sub(cls.value_clear_pattern, '', value)
-        # Verify the email
         if not re.match(cls.value_match_pattern, value):
             raise ContactEmailValueError()
         return value
@@ -163,7 +153,6 @@ class Address(Field):
 
         :param value: the value (string, mandatory)
         """
-        # Check whether the name is empty or None
         if not value:
             raise ContactAddressCannotBeEmpty()
         super().__init__(str(value))
@@ -192,18 +181,14 @@ class Record:
         self.__birthday: Optional[Birthday] = None
         self.__phones: list[Phone] = []
         self.__emails: list[Email] = []
-        # Add address if given
         if isinstance(address, str) and address:
             self.edit_address(address)
-        # Add birthday if given
         if isinstance(birthday, str) and birthday:
             self.edit_birthday(birthday)
-        # Add phone numbers if given, removing duplicates
         if isinstance(phones, list):
             for phone in phones:
                 if self.__find_phone(phone) is None:
                     self.add_phone(phone)
-        # Add emails if given, removing duplicates
         if isinstance(emails, list):
             for email in emails:
                 if self.__find_email(email) is None:
@@ -252,9 +237,7 @@ class Record:
         :param phone: phone number (string, mandatory)
         :return: phone field, if found (Phone, optional)
         """
-        # Clear the phone number from formatting symbols and whitespaces
         phone = Phone.prepare(phone)
-        # Find and return by phone number
         return next((p for p in self.__phones if p.value == phone), None)
 
     def __find_email(self, email: str) -> Optional[Email]:
@@ -263,9 +246,7 @@ class Record:
         :param email: email (string, mandatory)
         :return: email field, if found (Email, optional)
         """
-        # Clear the email fom whitespaces
         email = Email.prepare(email)
-        # Find and return by email
         return next((p for p in self.__emails if p.value == email), None)
 
     def edit_name(self, name: str) -> None:
@@ -282,7 +263,6 @@ class Record:
         """
         if self.__address is not None:
             raise ContactAddressAlreadyExist()
-        # Add the birthday
         self.edit_address(address)
 
     def edit_address(self, address: str) -> None:
@@ -304,7 +284,6 @@ class Record:
         """
         if self.__birthday is not None:
             raise ContactBirthdayAlreadyExist()
-        # Add the birthday
         self.edit_birthday(birthday)
 
     def edit_birthday(self, birthday: str) -> None:
@@ -326,13 +305,11 @@ class Record:
         :param today: Today's date (date, mandatory)
         :return: Next birthday date (date, optional)
         """
-        # If contact does not have a birthday, return None
         if self.__birthday is None:
             return None
 
         birthday: datetime.date = self.__birthday.birthday(today.year)
         if birthday < today:
-            # If the birthday has already passed this year, shift the date to the next year
             birthday = self.__birthday.birthday(today.year + 1)
 
         return birthday
@@ -345,9 +322,7 @@ class Record:
         """
         phone_object: Optional[Phone] = self.__find_phone(phone)
         if phone_object is None:
-            # Phone number not found - raise the phone number not found exception
             raise ContactPhoneNotFound()
-        # Return the phone number field
         return phone_object
 
     def add_phone(self, phone: str) -> None:
@@ -356,9 +331,7 @@ class Record:
         :param phone: phone number (string, mandatory)
         """
         if self.__find_phone(phone):
-            # Phone number found - raise the phone number already exists exception
             raise ContactPhoneAlreadyExist()
-        # Add the phone number
         self.__phones.append(Phone(phone))
 
     def remove_phone(self, phone: str) -> None:
@@ -384,9 +357,7 @@ class Record:
         """
         email_object: Optional[Email] = self.__find_email(email)
         if email_object is None:
-            # Email not found - raise the email not found exception
             raise ContactEmailNotFound()
-        # Return the phone number field
         return email_object
 
     def add_email(self, email: str) -> None:
@@ -395,9 +366,7 @@ class Record:
         :param email: email (string, mandatory)
         """
         if self.__find_email(email):
-            # Email found - raise the email already exists exception
             raise ContactEmailAlreadyExist()
-        # Add the email
         self.__emails.append(Email(email))
 
     def remove_email(self, email: str) -> None:

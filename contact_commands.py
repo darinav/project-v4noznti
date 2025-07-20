@@ -1,4 +1,4 @@
-from colorama import Fore, Style
+from colorama import Fore
 from books import AddressBook, Record
 
 import re
@@ -17,7 +17,7 @@ def _format_record_row(record, birthday_override=None):
     phones = ', '.join(str(ph) for ph in getattr(record, 'phones', []) if ph)
     emails = ', '.join(str(em) for em in getattr(record, 'emails', []) if em)
     address = getattr(record, 'address', '')
-    birthday = birthday_override if birthday_override else getattr(record, 'birthday', '')
+    birthday = (birthday_override if birthday_override else getattr(record, 'birthday', '')) or ''
     if hasattr(birthday, 'value'):
         birthday = birthday.value
     return [

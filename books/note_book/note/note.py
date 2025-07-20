@@ -20,7 +20,6 @@ class Title(Field):
 
         :param value: the title (string, mandatory)
         """
-        # Check whether the name is empty or None
         if not value:
             raise NoteTitleMandatory()
         super().__init__(str(value))
@@ -32,7 +31,6 @@ class Text(Field):
 
         :param value: the text (string, mandatory)
         """
-        # Check whether the name is empty or None
         if not value:
             raise NoteTextMandatory()
         super().__init__(str(value))
@@ -44,7 +42,6 @@ class Tag(Field):
 
         :param value: the text (string, mandatory)
         """
-        # Check whether the name is empty or None
         if not value:
             raise TagValueCannotBeEmpty()
         super().__init__(str(value))
@@ -90,7 +87,6 @@ class Tags:
         :param tags: new tags (Tags, optional)
         :return: new instance (Tags)
         """
-        # Create a new Tags instance with the combined tags
         return Tags(*self.__tags.union(tags))
 
     def __radd__(self, tags: Tags) -> Tags:
@@ -116,7 +112,6 @@ class Tags:
         :param tags: tags to be deleted (Tags, optional)
         :return: new instance (Tags)
         """
-        # Create a new Tags instance with the tags removed
         return Tags(*self.__tags.difference(tags))
 
     def __rsub__(self, tags: Tags) -> Tags:
@@ -142,7 +137,6 @@ class Tags:
         :param value: tag value (any type, mandatory)
         :return: Tag field, if found (Tag, optional)
         """
-        # Find and return by tag value
         return next((tag for tag in self if str(tag) == str(value)), None)
 
 
@@ -169,10 +163,9 @@ class Note:
 
         :return: readable string (string)
         """
-        tags_str = ", ".join(self.tags_list) if self.tags_list else ""
         readable_string: str = f"Note title: {self.title}; text: {self.text}"
-        if tags_str:
-            readable_string += f"; tags: {tags_str}"
+        if self.tags_number > 0:
+            readable_string += f"; tags: {self.tags}"
         return readable_string
 
     @property
@@ -246,7 +239,6 @@ class Note:
         :param value: tag value (any type, mandatory)
         :return: flag indicating whether the tag exists (boolean)
         """
-        # Find a tag and return a flag indicating whether the tag exists
         return value in self.__tags
 
     def edit_title(self, title: str) -> None:
@@ -261,9 +253,6 @@ class Note:
 
         :param text: the text of the note (string, mandatory)
         """
-        # Remove the old Text tags
         self.delete_tags(*self.__class__.parse_text_for_hashtags(self.__text.value))
-        # Replace text
         self.__text = Text(text)
-        # Add the new Text tags
         self.add_tags(*self.__class__.parse_text_for_hashtags(self.__text.value))
