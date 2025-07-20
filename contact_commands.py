@@ -65,7 +65,7 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
             if address:
                 record.add_address(address)
 
-            print(Fore.RED + "Введіть день народження (YYYY-MM-DD або Enter): ", end="")
+            print(Fore.RED + "Введіть день народження (DD-MM-YYYY або Enter): ", end="")
             birthday = input().strip()
             if birthday:
                 record.add_birthday(birthday)

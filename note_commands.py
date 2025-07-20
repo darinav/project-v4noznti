@@ -37,7 +37,7 @@ def handle_note_command(command: str, notebook: NoteBook):
         title = parts[2]
 
         try:
-            results = notebook.search_by_title(title)
+            results = [(i, n) for i, n in notebook.notes() if title.lower() == n.title.lower()]
             if not results:
                 raise NoteNotFound()
             index, note = results[0]
@@ -54,7 +54,7 @@ def handle_note_command(command: str, notebook: NoteBook):
         title = parts[2]
 
         try:
-            results = notebook.search_by_title(title)
+            results = [(i, n) for i, n in notebook.notes() if title.lower() == n.title.lower()]
             if not results:
                 raise NoteNotFound()
             index, note = results[0]
@@ -72,7 +72,7 @@ def handle_note_command(command: str, notebook: NoteBook):
         tag_to_delete = parts[3]
 
         try:
-            results = notebook.search_by_title(title)
+            results = [(i, n) for i, n in notebook.notes() if title.lower() == n.title.lower()]
             if not results:
                 raise NoteNotFound()
             index, note = results[0]
@@ -86,7 +86,7 @@ def handle_note_command(command: str, notebook: NoteBook):
         title = parts[2]
 
         try:
-            results = notebook.search_by_title(title)
+            results = [(i, n) for i, n in notebook.notes() if title.lower() == n.title.lower()]
             if not results:
                 raise NoteNotFound()
             index, _ = results[0]
