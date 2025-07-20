@@ -26,7 +26,6 @@ class NoteBook(UserDict):
         """
         super().__init__()
         self.__unique_titles: bool = unique_titles
-        # Add note records if given, removing duplicates
         for note in args:
             if not self.__unique_titles or note.title not in self.__titles():
                 self.add_note(note)
@@ -74,11 +73,8 @@ class NoteBook(UserDict):
         :return: index of the added note (int)
         """
         if self.__unique_titles and note.title in self.__titles():
-            # Unique titles mode: Note found - raise the note already exists exception
             raise NoteAlreadyExist()
-        # Add the note record
         self.data[self.__next_note_index()] = note
-        # Return Note record index
         return next(reversed(self.data))
 
     def get_note(self, index: int) -> tuple[int, Note]:
@@ -88,9 +84,7 @@ class NoteBook(UserDict):
         :return: note record with index (tuple int, Note)
         """
         if index <= 0:
-            # Wrong index value - raise the note not found exception
             raise NoteNotFound()
-        # Remove the note
         try:
             return index, self.data[index]
         except KeyError:
@@ -102,9 +96,7 @@ class NoteBook(UserDict):
         :param index: note index (int, mandatory)
         """
         if index <= 0:
-            # Wrong index value - raise the note not found exception
             raise NoteNotFound()
-        # Remove the note
         try:
             self.data.pop(index)
         except KeyError:
@@ -117,11 +109,9 @@ class NoteBook(UserDict):
         :return: found notes (list of tuple int, Note)
         """
         found_keys: set[str] = set()
-        # Combine the search results into a single set
         for result in args:
             if isinstance(result, set):
                 found_keys.update(result)
-        # Return found records
         return [(idx, note) for idx, note in self.data.items() if idx in found_keys]
 
     def search_by_title(self, keyword: str) -> list[tuple[int, Note]]:
@@ -130,9 +120,7 @@ class NoteBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found notes (list of tuple int, Note)
         """
-        # Convert the keyword to lower case
         keyword = keyword.lower() or ""
-        # Return the found notes
         return self.__search_merge(
             {idx for idx, note in self.data.items() if keyword and keyword in note.title.lower()}
         )
@@ -143,9 +131,7 @@ class NoteBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found notes (list of tuple int, Note)
         """
-        # Convert the keyword to lower case
         keyword = keyword.lower() or ""
-        # Return the found notes
         return self.__search_merge(
             {idx for idx, note in self.data.items() if keyword and keyword in note.text.lower()}
         )
@@ -156,9 +142,7 @@ class NoteBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found notes (list of tuple int, Note)
         """
-        # Convert the keyword to lower case
         keyword = keyword.lower() or ""
-        # Return the found notes
         return self.__search_merge(
             {idx for idx, note in self.data.items() if keyword and keyword in note.tags.lower()}
         )
@@ -169,9 +153,7 @@ class NoteBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found notes (list of tuple int, Note)
         """
-        # Convert the keyword to lower case
         keyword = keyword.lower() or ""
-        # Return the found notes
         return self.__search_merge(
             {idx for idx, note in self.data.items() if keyword and keyword in note.title.lower()},
             {idx for idx, note in self.data.items() if keyword and keyword in note.text.lower()},

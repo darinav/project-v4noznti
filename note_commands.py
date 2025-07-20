@@ -9,7 +9,6 @@ from colorama import Fore
 from books import NoteBook, Note
 from books.note_book.book import NoteBook as FullNoteBook
 NoteBook.SortOrder = FullNoteBook.SortOrder
-from books.note_book.error import *
 
 def _find_note_exact(notebook: NoteBook, title: str):
     notes = [item for item in notebook.notes() if item[1].title == title]
@@ -48,7 +47,6 @@ def handle_note_command(command: str, notebook: NoteBook):
 
     action = parts[0].lower()
 
-    # Додавання нової нотатки
     if action == "add" and len(parts) >= 2 and parts[1] == "note":
         if len(parts) == 2:
             title = input("Введіть назву нотатки: ").strip()
@@ -76,7 +74,6 @@ def handle_note_command(command: str, notebook: NoteBook):
         except Exception as e:
             print(Fore.RED + f"❌ Помилка: {e}")
 
-    # Редагування тексту нотатки
     elif action == "edit" and len(parts) >= 2 and parts[1] == "note":
         if len(parts) == 2:
             title = input("Введіть назву нотатки для редагування: ").strip()
@@ -95,7 +92,6 @@ def handle_note_command(command: str, notebook: NoteBook):
         note.edit_text(new_text)
         print(Fore.GREEN + "✅ Нотатку оновлено.")
 
-    # Редагування тегів у нотатці
     elif action == "edit" and len(parts) >= 2 and parts[1] == "tag":
         if len(parts) == 2:
             title = input("Введіть назву нотатки для редагування тегів: ").strip()
@@ -115,7 +111,6 @@ def handle_note_command(command: str, notebook: NoteBook):
         note.replace_tags(*tags)
         print(Fore.GREEN + "✅ Теги оновлено.")
 
-    # Видалення тегу з нотатки
     elif action == "delete" and len(parts) >= 2 and parts[1] == "tag":
         if len(parts) == 2:
             title = input("Введіть назву нотатки для видалення тегу: ").strip()
@@ -160,7 +155,6 @@ def handle_note_command(command: str, notebook: NoteBook):
             note.delete_tags(tag_to_delete)
             print(Fore.GREEN + f"🗑️ Тег '{tag_to_delete}' видалено.")
 
-    # Видалення нотатки
     elif action == "delete" and len(parts) >= 2 and parts[1] == "note":
         if len(parts) == 2:
             title = input("Введіть назву нотатки для видалення: ").strip()
@@ -178,7 +172,6 @@ def handle_note_command(command: str, notebook: NoteBook):
         notebook.delete_note(index)
         print(Fore.GREEN + f"🗑️ Нотатку '{title}' видалено.")
 
-    # Пошук нотатки
     elif action == "search" and len(parts) >= 2 and parts[1] == "note":
         if len(parts) == 2:
             keyword = input("Введіть фразу для пошуку: ").strip()
@@ -190,11 +183,9 @@ def handle_note_command(command: str, notebook: NoteBook):
         notes = notebook.search(keyword)
         _print_notes_table([note for _, note in notes])
 
-    # Показ усіх нотаток
     elif command == "show all notes":
         _print_notes_table([note for _, note in notebook.notes()])
 
-    # Сортування нотаток за тегами
     elif command == "sort notes by tag":
         notes = notebook.notes(order=NoteBook.SortOrder.tags)
         _print_notes_table([note for _, note in notes])

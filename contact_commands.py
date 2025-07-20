@@ -1,4 +1,4 @@
-from colorama import Fore, Style
+from colorama import Fore
 from books import AddressBook, Record
 
 import re

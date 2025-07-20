@@ -23,7 +23,6 @@ class AddressBook(UserDict):
         """
         super().__init__()
         self.__upcoming_birthdays_period = upcoming_birthdays_period or 7
-        # Add contact records if given, removing duplicates
         for contact in args:
             if str(contact.name) not in self:
                 self.add_record(contact)
@@ -40,8 +39,6 @@ class AddressBook(UserDict):
         :return: lexicographically sorted keys (names) (iterable object)
         """
         return iter(sorted(self.data))
-        # # An alternative version
-        # return iter({name: self.data[name] for name in sorted(self.data)})
 
     def __congratulation_date(
             self,
@@ -58,31 +55,19 @@ class AddressBook(UserDict):
         :return: Congratulation date (datetime.date, optional)
         """
         try:
-            # If today parameter is None, determine the current date
             if today is None:
                 today = datetime.datetime.today().date()
             if not upcoming_birthdays_period:
                 upcoming_birthdays_period = self.__upcoming_birthdays_period
 
-            # Calculate next birthday
             next_birthday: Optional[datetime.date] = contact.next_birthday(today)
-
-            # Verify if the birthday is within the next congratulation_range_days days, including today
             if next_birthday is None or not 0 <= (next_birthday - today).days <= upcoming_birthdays_period:
-                # If the birthday does not exist or is not within the next congratulation_range_days days,
-                # including today, return None
                 return None
 
-            # Verify if the birthday falls on a weekend
             if next_birthday.isoweekday() in {6, 7, }:
-                # Shift the congratulation date to the following Monday, as it falls on a weekend
                 next_birthday += datetime.timedelta(days=((7 - next_birthday.isoweekday()) + 1))
-
-            # Return congratulation date as string in 'YYYY.MM.DD' format
             return next_birthday
         except Exception as e:
-            # An unexpected error occurred
-            # Raise an exception to the upper level
             raise Exception("An unexpected error occurred: {error}.".format(error=repr(e)))
 
     def find(self, name: str) -> Record:
@@ -92,9 +77,7 @@ class AddressBook(UserDict):
         :return: contact record, if found (Record)
         """
         if name not in self:
-            # Contact found - raise the contact not found exception
             raise ContactNotFound()
-        # Return the contact
         return self.get(name, None)
 
     def add_record(self, contact: Record) -> None:
@@ -103,9 +86,8 @@ class AddressBook(UserDict):
         :param contact: contact record (Record, mandatory)
         """
         if str(contact.name) in self:
-            # Contact found - raise the contact already exists exception
             raise ContactAlreadyExist()
-        # Add the contact record
+        
         self.data[str(contact.name)] = contact
 
     def delete_record(self, name: str) -> None:
@@ -114,9 +96,8 @@ class AddressBook(UserDict):
         :param name: contact name (string, mandatory)
         """
         if name not in self:
-            # Contact not found - raise the contact not found exception
             raise ContactNotFound()
-        # Remove the contact record
+
         self.data.pop(name, None)
 
     def upcoming_birthdays(
@@ -132,7 +113,6 @@ class AddressBook(UserDict):
         along with the congratulation date (Iterator of tuple)
         """
 
-        # Named tuple creation
         UpcomingBirthday = namedtuple('UpcomingBirthday', ['contact', 'congratulation_date'])
 
         today: datetime.date = datetime.datetime.today().date()
@@ -144,7 +124,6 @@ class AddressBook(UserDict):
                         upcoming_birthdays_period=upcoming_birthdays_period,
                     )
             ) is not None:
-                # Return the upcoming birthday contact and the congratulation date
                 yield UpcomingBirthday(contact, congratulation_date)
 
     def upcoming_birthdays_by_days(
@@ -159,12 +138,9 @@ class AddressBook(UserDict):
         :return: contacts whose birthday is within the next period, grouped by date (dictionary)
         """
 
-        # Collect contacts whose birthday is within the next period with the congratulation date
         upcoming_birthdays: dict[datetime.date, list[Record]] = defaultdict(list)
         for record, congratulation_date in self.upcoming_birthdays(upcoming_birthdays_period=upcoming_birthdays_period):
             upcoming_birthdays[congratulation_date].append(record)
-
-        # Sort and return contacts birthdays by date
         return dict(sorted(upcoming_birthdays.items()))
 
     def __search_merge(self, *args) -> list[Record]:
@@ -174,11 +150,9 @@ class AddressBook(UserDict):
         :return: found contact records (list of Records)
         """
         found_keys: set[str] = set()
-        # Combine the search results into a single set
         for result in args:
             if isinstance(result, set):
                 found_keys.update(result)
-        # Return found records
         return [value for key, value in self.data.items() if key in found_keys]
 
     def search_by_address(self, keyword: str) -> list[Record]:
@@ -187,9 +161,7 @@ class AddressBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found contact records (list of Records)
         """
-        # Convert the keyword to lower case
         keyword = keyword.lower() or ""
-        # Search by the keyword
         return self.__search_merge(
             {key for key, value in self.data.items() if keyword and keyword in value.address.lower()}
         )
@@ -200,9 +172,7 @@ class AddressBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found contact records (list of Records)
         """
-        # Convert the keyword to lower case
         keyword = keyword.lower() or ""
-        # Search by the keyword
         return self.__search_merge(
             {key for key, value in self.items() if keyword and [i for i in value.phones if keyword in i.lower()]}
         )
@@ -213,9 +183,7 @@ class AddressBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found contact records (list of Records)
         """
-        # Convert the keyword to lower case
         keyword = keyword.lower() or ""
-        # Search by the keyword
         return self.__search_merge(
             {key for key, value in self.items() if keyword and [i for i in value.emails if keyword in i.lower()]}
         )
@@ -226,9 +194,7 @@ class AddressBook(UserDict):
         :param keyword: search keyword or sequence (string, mandatory)
         :return: found contact records (list of Records)
         """
-        # Convert the keyword to lower case
         keyword = keyword.lower() or ""
-        # Search by the keyword
         return self.__search_merge(
             {key for key, value in self.items() if keyword and keyword in value.name.lower()},
             {key for key, value in self.items() if keyword and keyword in value.address.lower()},
