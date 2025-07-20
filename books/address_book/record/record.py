@@ -114,7 +114,7 @@ class Phone(Field):
                     (cls.strict or not phonenumbers.is_possible_number(phone_number))
             ):
                 raise ContactPhoneValueError()
-                value = phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.E164)
+            value = phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.E164)
         except phonenumbers.NumberParseException:
             raise ContactPhoneValueError()
         return value
