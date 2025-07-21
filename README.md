@@ -50,7 +50,7 @@ project-v4noznti/
 Команда реалізовує проєкт у реальному робочому середовищі з використанням:
 -  Git/GitHub — [репозиторій проєкту](https://github.com/darinav/project-v4noznti/)
 - Trello — [дошка завдань](https://trello.com/b/zo3BC7Op/vi4nozayniatiproject)
-- Презентація [гугл презентація] (--link--) - after Anna gives a link add and rasie a pull-req
+- Презентація [гугл презентація] (https://onedrive.live.com/edit?id=E4D7F5D8F7B5A1D3!152&resid=E4D7F5D8F7B5A1D3!152&authkey=!ADtOr_eFWL0aepY&ithint=file,pptx&e=3b5D8u&wdo=2&cid=e4d7f5d8f7b5a1d3 )
 
 ## 🧩 Функціонал
 
