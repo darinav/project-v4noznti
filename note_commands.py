@@ -20,9 +20,7 @@ def _print_notes_table(notes: list[Note]):
         "Текст",
         "Теги"
     ]
-    rows = []
-    for n in notes:
-        rows.append([n.title, n.text, n.tags])
+    rows = [[n.title, n.text, n.tags] for n in notes]
     if not rows:
         print(Fore.YELLOW + "Немає нотаток для виводу.")
         return

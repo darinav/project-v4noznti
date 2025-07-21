@@ -1,34 +1,21 @@
 from colorama import Fore
-from books import AddressBook, Record
+from books import AddressBook, Record, address_book_errors
 
 import re
-import datetime
 
 def _find_record_exact(book: AddressBook, name: str):
     try:
-        record = book.find(name)
-        if record and getattr(record, "name", None) == name:
-            return record
-    except Exception:
+        return book.find(name)
+    except address_book_errors.ContactNotFound:
         pass
     return None
 
-def _format_record_row(record, birthday_override=None):
-    phones = ', '.join(str(ph) for ph in getattr(record, 'phones', []) if ph)
-    emails = ', '.join(str(em) for em in getattr(record, 'emails', []) if em)
-    address = getattr(record, 'address', '')
-    birthday = (birthday_override if birthday_override else getattr(record, 'birthday', '')) or ''
-    if hasattr(birthday, 'value'):
-        birthday = birthday.value
-    return [
-        str(getattr(record, 'name', '')),
-        phones,
-        emails,
-        address,
-        birthday
-    ]
+def _format_record_row(record: Record):
+    phones = ', '.join(ph for ph in record.phones)
+    emails = ', '.join(em for em in record.emails)
+    return [record.name, phones, emails, record.address, str(record.birthday or '')]
 
-def _print_contacts_table(records):
+def _print_contacts_table(records: list[Record]):
     headers = [
         "Ім'я",
         "Телефон",
@@ -36,12 +23,7 @@ def _print_contacts_table(records):
         "Адреса",
         "ДН"
     ]
-    rows = []
-    for r in records:
-        if isinstance(r, tuple) and len(r) == 2 and hasattr(r[0], "name"):
-            rows.append(_format_record_row(r[0], birthday_override=r[1]))
-        else:
-            rows.append(_format_record_row(r))
+    rows = [_format_record_row(r) for r in records]
     if not rows:
         print(Fore.YELLOW + "Немає контактів для виводу.")
         return
@@ -77,32 +59,6 @@ def _parse_days(parts):
     else:
         days = 7
     return days
-
-def _filter_birthdays(records, days):
-    today = datetime.date.today()
-    upcoming = []
-    for r in records:
-        b = getattr(r, 'birthday', None)
-        date_value = None
-        if hasattr(b, 'value'):
-            b = b.value
-        if isinstance(b, str) and re.match(r"\d{2}\.\d{2}\.\d{4}", b):
-            try:
-                day, month, year = map(int, b.split('.'))
-                date_value = datetime.date(today.year, month, day)
-                if date_value < today:
-                    date_value = datetime.date(today.year + 1, month, day)
-            except Exception:
-                continue
-        elif isinstance(b, datetime.date):
-            date_value = b.replace(year=today.year)
-            if date_value < today:
-                date_value = date_value.replace(year=today.year + 1)
-        if date_value:
-            delta = (date_value - today).days
-            if 0 <= delta <= days:
-                upcoming.append((r, date_value.strftime('%d.%m.%Y')))
-    return upcoming
 
 def handle_contact_command(command: str, book: AddressBook) -> None:
     parts = command.strip().split()
@@ -192,7 +148,7 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
         _print_contacts_table([record])
 
     elif command == "show all contacts":
-        records = list(book.values()) if hasattr(book, 'values') else list(book)
+        records: list[Record] = [r for _, r in book.items()]
         if records:
             _print_contacts_table(records)
         else:
@@ -200,11 +156,12 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
 
     elif parts[0] == "show" and parts[1] == "birthdays":
         days = _parse_days(parts)
-        records = list(book.values()) if hasattr(book, 'values') else list(book)
-        output_rows = _filter_birthdays(records, days)
-        if output_rows:
+        records: list[Record] = [
+            r for r, _ in sorted(book.upcoming_birthdays(upcoming_birthdays_period=days), key=lambda i: i[1])
+        ]
+        if records:
             print(Fore.CYAN + f"Контакти, у яких день народження у наступні {days} днів:")
-            _print_contacts_table(output_rows)
+            _print_contacts_table(records)
         else:
             print(Fore.YELLOW + "Немає контактів із днями народження у цей період.")
 
@@ -213,9 +170,9 @@ def handle_contact_command(command: str, book: AddressBook) -> None:
         if not keyword:
             print(Fore.RED + "⚠️ Пошуковий запит не може бути порожнім.")
             return
-        results = list(book.search(keyword))
-        if results:
-            _print_contacts_table(results)
+        records: list[Record] = book.search(keyword)
+        if records:
+            _print_contacts_table(records)
         else:
             print(Fore.YELLOW + "Контактів не знайдено.")
 

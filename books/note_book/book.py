@@ -64,7 +64,7 @@ class NoteBook(UserDict):
                 )
             ]
 
-        return [(idx, note) for idx, note in self.data.items()]
+        return [(idx, note) for idx, note in self.items()]
 
     def add_note(self, note: Note) -> int:
         """ Add the note record, or raise the note already exists exception

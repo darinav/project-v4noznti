@@ -76,9 +76,10 @@ class AddressBook(UserDict):
         :param name: contact name (string, mandatory)
         :return: contact record, if found (Record)
         """
-        if name not in self:
-            raise ContactNotFound()
-        return self.get(name, None)
+        contacts: list[Record] = self.search_by_name(name)
+        if (contact := next(filter(lambda i: i.name == name, contacts), None)) is not None:
+            return contact
+        raise ContactNotFound()
 
     def add_record(self, contact: Record) -> None:
         """ Add the contact record, or raise the contact already exists exception
@@ -153,7 +154,16 @@ class AddressBook(UserDict):
         for result in args:
             if isinstance(result, set):
                 found_keys.update(result)
-        return [value for key, value in self.data.items() if key in found_keys]
+        return [value for key, value in self.items() if key in found_keys]
+
+    def search_by_name(self, keyword: str) -> list[Record]:
+        """ Search and return the contact records by keyword/sequence in the name
+
+        :param keyword: search keyword or sequence (string, mandatory)
+        :return: found contact records (list of Records)
+        """
+        keyword = keyword.lower() or ""
+        return self.__search_merge({key for key, value in self.items() if keyword and keyword in value.name.lower()})
 
     def search_by_address(self, keyword: str) -> list[Record]:
         """ Search and return the contact records by keyword/sequence in the address
