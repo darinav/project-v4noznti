@@ -29,8 +29,9 @@ def _print_contacts_table(records: list[Record]):
         return
 
     col_widths = [max(len(str(cell)) for cell in col) for col in zip(*([headers] + rows))]
-    def fmt_row(row):
-        return " │ ".join(str(cell).ljust(w) for cell, w in zip(row, col_widths))
+
+    def fmt_row(row_data):
+        return " │ ".join(str(cell).ljust(w) for cell, w in zip(row_data, col_widths))
 
     border = "─┼─".join("─" * w for w in col_widths)
 
