@@ -6,13 +6,13 @@ import os
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from cli.guess_command.guess_command import (
+from guess_command.guess_command import (
     _suggest_command,
     _is_general_command,
     _find_best_match,
     handle_command_with_guess
 )
-from cli.guess_command.possible_commands import GENERAL_COMMANDS
+from guess_command.possible_commands import GENERAL_COMMANDS
 
 
 class TestSuggestCommand(unittest.TestCase):

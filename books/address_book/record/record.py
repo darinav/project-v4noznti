@@ -45,6 +45,13 @@ class Birthday(Field):
         """
         super().__init__(self.prepare(value))
 
+    def __str__(self) -> str:
+        """ Create a readable string for the Birthday class instance
+
+        :return: readable string (string)
+        """
+        return self.value.strftime("%d.%m.%Y") if self.value else ''
+
     @classmethod
     def prepare(cls, value: str) -> datetime.date:
         """ Birthday validation and conversion
@@ -75,13 +82,6 @@ class Birthday(Field):
             return self.value.replace(year=year)
         except ValueError:
             return datetime.date(year, 3, 1)
-
-    def __str__(self) -> str:
-        """ Create a readable string for the Birthday class instance
-
-        :return: readable string (string)
-        """
-        return self.value.strftime("%d.%m.%Y")
 
 
 class Phone(Field):

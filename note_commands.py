@@ -20,16 +20,15 @@ def _print_notes_table(notes: list[Note]):
         "Текст",
         "Теги"
     ]
-    rows = []
-    for n in notes:
-        rows.append([n.title, n.text, n.tags])
+    rows = [[n.title, n.text, n.tags] for n in notes]
     if not rows:
         print(Fore.YELLOW + "Немає нотаток для виводу.")
         return
 
     col_widths = [max(len(str(cell)) for cell in col) for col in zip(*([headers] + rows))]
-    def fmt_row(row):
-        return " │ ".join(str(cell).ljust(w) for cell, w in zip(row, col_widths))
+
+    def fmt_row(row_data):
+        return " │ ".join(str(cell).ljust(w) for cell, w in zip(row_data, col_widths))
 
     border = "─┼─".join("─" * w for w in col_widths)
 
